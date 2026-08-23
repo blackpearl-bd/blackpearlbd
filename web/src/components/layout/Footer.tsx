@@ -8,9 +8,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">B</span>
-              </div>
+              <img src="/blackpearl.svg" alt="BlackPearl" className="w-8 h-8" />
               <span className="text-xl font-bold">BlackPearl</span>
             </div>
             <p className="text-slate-300 max-w-md">

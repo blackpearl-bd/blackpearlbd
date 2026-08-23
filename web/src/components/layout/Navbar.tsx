@@ -23,9 +23,7 @@ export function Navbar() {
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-lg">B</span>
-              </div>
+              <img src="/blackpearl.svg" alt="BlackPearl" className="w-8 h-8" />
               <span className="text-xl font-bold text-primary hidden sm:block">BlackPearl</span>
             </Link>
           </div>
