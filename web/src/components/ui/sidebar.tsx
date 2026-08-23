@@ -171,7 +171,7 @@ function Sidebar({
         />
         <div
           className={cn(
-            "fixed inset-y-0 z-50 flex h-svh w-[--sidebar-width] flex-col bg-sidebar p-0 text-sidebar-foreground transition-transform ease-linear",
+            "fixed inset-y-0 z-50 flex h-svh w-[70vw] flex-col bg-white p-0 text-sidebar-foreground transition-transform ease-linear shadow-xl",
             side === "left"
               ? "left-0"
               : "right-0",
