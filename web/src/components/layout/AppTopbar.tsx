@@ -89,7 +89,7 @@ export function AppTopbar() {
       ) : (
         <>
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            <SidebarTrigger className="size-11 shrink-0 md:hidden [&_svg]:size-5!" />
+            <SidebarTrigger className="size-11 shrink-0 [&_svg]:size-5!" />
             <div className="flex items-center gap-3">
               <currentItem.icon className="hidden size-5 shrink-0 md:block" />
               <p className="truncate text-lg font-medium">

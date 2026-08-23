@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LogOut } from 'lucide-react'
+import { LogOut, ChevronsLeft, ChevronsRight } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { getNavigationGroups } from '@/config/navigation'
 import { cn } from '@/lib/utils'
@@ -29,7 +29,7 @@ const menuButtonClassName = cn(
 
 export function AppSidebar() {
   const { isAdmin, logout } = useAuth()
-  const { isMobile, setOpenMobile } = useSidebar()
+  const { state, isMobile, setOpenMobile, toggleSidebar } = useSidebar()
   const navigationGroups = getNavigationGroups(isAdmin)
 
   return (
@@ -37,10 +37,23 @@ export function AppSidebar() {
       <SidebarHeader className="h-16 flex-row items-center border-b border-sidebar-border md:h-20 px-4">
         <Link to="/" className="flex min-w-0 flex-1 items-center gap-2">
           <img src="/blackpearl.svg" alt="BlackPearl" className="w-8 h-8 shrink-0" />
-          <span className="truncate text-xl font-semibold tracking-tight">
+          <span className="truncate text-xl font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
             BlackPearl
           </span>
         </Link>
+        {/* Desktop collapse toggle */}
+        <button
+          type="button"
+          onClick={toggleSidebar}
+          className="hidden md:flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-sidebar-accent transition-colors"
+          aria-label={state === 'expanded' ? 'Collapse sidebar' : 'Expand sidebar'}
+        >
+          {state === 'expanded' ? (
+            <ChevronsLeft className="size-5 text-muted-foreground" />
+          ) : (
+            <ChevronsRight className="size-5 text-muted-foreground" />
+          )}
+        </button>
       </SidebarHeader>
 
       <SidebarContent className="gap-4 overflow-x-hidden overflow-y-auto px-3 py-4 group-data-[collapsible=icon]:overflow-y-auto!">
