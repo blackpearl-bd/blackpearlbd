@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useBookings } from '@/hooks/useBookings';
 import { useAuth } from '@/hooks/useAuth';
 import { formatCurrency } from '@/lib/utils';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User } from 'lucide-react';
 import type { TourDeal } from '@/types';
 
 interface BookingModalProps {
@@ -16,7 +16,7 @@ interface BookingModalProps {
 }
 
 export function BookingModal({ isOpen, onClose, deal }: BookingModalProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, profile } = useAuth();
   const { createBooking, isCreating } = useBookings();
   const [travelerDetails, setTravelerDetails] = useState({
     name: '',
@@ -24,6 +24,26 @@ export function BookingModal({ isOpen, onClose, deal }: BookingModalProps) {
     phone: '',
     emergency_contact: '',
   });
+
+  // Auto-fill from profile when modal opens for signed-in users
+  useEffect(() => {
+    if (isOpen && isAuthenticated && profile) {
+      setTravelerDetails({
+        name: profile.full_name || '',
+        email: profile.email || '',
+        phone: profile.phone || '',
+        emergency_contact: '',
+      });
+    } else if (isOpen) {
+      // Reset form for non-signed-in users
+      setTravelerDetails({
+        name: '',
+        email: '',
+        phone: '',
+        emergency_contact: '',
+      });
+    }
+  }, [isOpen, isAuthenticated, profile]);
 
   const handleConfirm = () => {
     if (!travelerDetails.name || !travelerDetails.email || !travelerDetails.phone) {
@@ -44,10 +64,13 @@ export function BookingModal({ isOpen, onClose, deal }: BookingModalProps) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Confirm Booking</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            Confirm Booking
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Deal Summary */}
           <div className="bg-slate-50 p-4 rounded-lg">
             <h4 className="font-semibold text-primary">{deal.title}</h4>
             <p className="text-sm text-slate-600">{deal.destination}</p>
@@ -56,6 +79,18 @@ export function BookingModal({ isOpen, onClose, deal }: BookingModalProps) {
             </p>
           </div>
 
+          {/* Guest Notice */}
+          {!isAuthenticated && (
+            <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
+              <User className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <p>
+                You're booking as a guest.{' '}
+                <strong>Sign in</strong> next time to skip this step and track your bookings.
+              </p>
+            </div>
+          )}
+
+          {/* Traveler Details Form */}
           <div className="space-y-3">
             <div>
               <Label htmlFor="name">Full Name *</Label>
