@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LogOut, ChevronRight } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { getNavigationGroups } from '@/config/navigation'
 import { cn } from '@/lib/utils'
@@ -29,6 +29,7 @@ const menuButtonClassName = cn(
 
 export function AppSidebar() {
   const { isAdmin, logout } = useAuth()
+  const { isMobile, setOpenMobile } = useSidebar()
   const navigationGroups = getNavigationGroups(isAdmin)
 
   return (
@@ -58,7 +59,7 @@ export function AppSidebar() {
                       tooltip={item.name}
                       className={menuButtonClassName}
                     >
-                      <Link to={item.href}>
+                      <Link to={item.href} onClick={() => { if (isMobile) setOpenMobile(false) }}>
                         <item.icon />
                         <span>{item.name}</span>
                         {item.badge && (

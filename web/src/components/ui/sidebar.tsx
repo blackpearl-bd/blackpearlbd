@@ -162,18 +162,20 @@ function Sidebar({
     return (
       <div data-state={openMobile ? "open" : "closed"} className="md:hidden">
         <div
-          className="fixed inset-0 z-50 bg-black/80"
+          className={cn(
+            "fixed inset-0 z-50 bg-black/80 transition-opacity",
+            openMobile ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}
           onClick={() => setOpenMobile(false)}
           data-state={openMobile ? "open" : "closed"}
         />
         <div
           className={cn(
-            "fixed inset-y-0 z-50 flex h-svh w-[--sidebar-width] flex-col bg-sidebar p-0 text-sidebar-foreground transition-all ease-linear",
+            "fixed inset-y-0 z-50 flex h-svh w-[--sidebar-width] flex-col bg-sidebar p-0 text-sidebar-foreground transition-transform ease-linear",
             side === "left"
-              ? "left-0 w-[--sidebar-width]"
-              : "right-0 w-[--sidebar-width]",
-            "data-[state=closed]:-translate-x-full",
-            "data-[state=open]:translate-x-0",
+              ? "left-0"
+              : "right-0",
+            openMobile ? "translate-x-0" : (side === "left" ? "-translate-x-full" : "translate-x-full"),
             className
           )}
           data-state={openMobile ? "open" : "closed"}
@@ -232,7 +234,7 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<"button">) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, isMobile, openMobile, setOpenMobile } = useSidebar()
 
   return (
     <button
@@ -240,7 +242,11 @@ function SidebarTrigger({
       type="button"
       onClick={(event) => {
         onClick?.(event)
-        toggleSidebar()
+        if (isMobile) {
+          setOpenMobile(!openMobile)
+        } else {
+          toggleSidebar()
+        }
       }}
       className={cn(
         "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground h-7 w-7 cursor-pointer p-0",
