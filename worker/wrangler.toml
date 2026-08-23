@@ -1,0 +1,13 @@
+name = "blackpearl-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+SUPABASE_URL = ""
+SUPABASE_ANON_KEY = ""
+SUPABASE_SERVICE_ROLE_KEY = ""
+
+# R2 bucket (optional, for file storage)
+# [[r2_buckets]]
+# binding = "BLACKPEARL_BUCKET"
+# bucket_name = "blackpearl-assets"
