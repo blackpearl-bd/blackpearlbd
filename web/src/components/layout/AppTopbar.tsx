@@ -89,7 +89,14 @@ export function AppTopbar() {
         </div>
       ) : (
         <>
-          <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
+            <Link to="/" className="flex items-center gap-2 shrink-0">
+              <img src="/blackpearl.svg" alt="BlackPearl" className="w-8 h-8 shrink-0" />
+              <span className="truncate text-xl font-semibold tracking-tight">
+                BlackPearl
+              </span>
+            </Link>
+            <div className="hidden h-6 w-px bg-border md:block" />
             <button
               type="button"
               onClick={() => {
@@ -99,14 +106,15 @@ export function AppTopbar() {
                   toggleSidebar()
                 }
               }}
-              className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg hover:bg-accent transition-colors"
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-accent transition-colors"
               aria-label="Toggle sidebar"
             >
               <ChevronsRight className="size-5 text-muted-foreground transition-transform" style={{ transform: (isMobile ? openMobile : state === 'expanded') ? 'rotate(180deg)' : 'none' }} />
             </button>
-            <div className="flex items-center gap-3">
-              <currentItem.icon className="hidden size-5 shrink-0 md:block" />
-              <p className="truncate text-lg font-medium">
+            <div className="hidden h-6 w-px bg-border md:block" />
+            <div className="flex items-center gap-2">
+              <currentItem.icon className="size-4 shrink-0 text-muted-foreground" />
+              <p className="truncate text-base font-medium text-muted-foreground">
                 {currentItem.name}
               </p>
             </div>

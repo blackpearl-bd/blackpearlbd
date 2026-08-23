@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { LogOut, ChevronsLeft, ChevronsRight } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { getNavigationGroups } from '@/config/navigation'
 import { cn } from '@/lib/utils'
@@ -10,7 +10,6 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuBadge,
   SidebarMenuButton,
@@ -29,34 +28,12 @@ const menuButtonClassName = cn(
 
 export function AppSidebar() {
   const { isAdmin, logout } = useAuth()
-  const { state, isMobile, setOpenMobile, toggleSidebar } = useSidebar()
+  const { isMobile, setOpenMobile } = useSidebar()
   const navigationGroups = getNavigationGroups(isAdmin)
 
   return (
     <Sidebar collapsible="icon" className="h-full border-none">
-      <SidebarHeader className="h-16 flex-row items-center border-b border-sidebar-border md:h-20 px-4">
-        <Link to="/" className="flex min-w-0 flex-1 items-center gap-2">
-          <img src="/blackpearl.svg" alt="BlackPearl" className="w-8 h-8 shrink-0" />
-          <span className="truncate text-xl font-semibold tracking-tight group-data-[collapsible=icon]:hidden">
-            BlackPearl
-          </span>
-        </Link>
-        {/* Collapse toggle */}
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-sidebar-accent transition-colors"
-          aria-label={state === 'expanded' ? 'Collapse sidebar' : 'Expand sidebar'}
-        >
-          {state === 'expanded' ? (
-            <ChevronsLeft className="size-5 text-muted-foreground" />
-          ) : (
-            <ChevronsRight className="size-5 text-muted-foreground" />
-          )}
-        </button>
-      </SidebarHeader>
-
-      <SidebarContent className="gap-4 overflow-x-hidden overflow-y-auto px-3 py-4 group-data-[collapsible=icon]:overflow-y-auto!">
+      <SidebarContent className="gap-4 overflow-x-hidden overflow-y-auto px-2 py-3 group-data-[collapsible=icon]:overflow-y-auto!">
         {navigationGroups.map((group) => (
           <SidebarGroup key={group.label} className="gap-2 p-0">
             <SidebarGroupLabel className="h-auto px-3 py-1 text-base font-normal tracking-tight text-muted-foreground">
@@ -90,7 +67,7 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="gap-6 border-t border-sidebar-border px-3 py-3">
+      <SidebarFooter className="gap-6 border-t border-sidebar-border px-2 py-3">
         <SidebarMenu className="gap-2">
           <SidebarMenuItem>
             <SidebarMenuButton
