@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation, Link } from 'react-router-dom'
-import { Search, Bell, User, Menu, X, LogOut, Settings } from 'lucide-react'
+import { Search, Bell, User, ChevronsRight, X, LogOut, Settings } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { getNavigationGroups } from '@/config/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
+import { useSidebar } from '@/components/ui/sidebar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +18,7 @@ import {
 
 export function AppTopbar() {
   const { user, profile, isAdmin, logout } = useAuth()
+  const { state, isMobile, openMobile, setOpenMobile, toggleSidebar } = useSidebar()
   const { pathname } = useLocation()
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
@@ -89,7 +90,20 @@ export function AppTopbar() {
       ) : (
         <>
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            <SidebarTrigger className="size-11 shrink-0 [&_svg]:size-5!" />
+            <button
+              type="button"
+              onClick={() => {
+                if (isMobile) {
+                  setOpenMobile(!openMobile)
+                } else {
+                  toggleSidebar()
+                }
+              }}
+              className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg hover:bg-accent transition-colors"
+              aria-label="Toggle sidebar"
+            >
+              <ChevronsRight className="size-5 text-muted-foreground transition-transform" style={{ transform: (isMobile ? openMobile : state === 'expanded') ? 'rotate(180deg)' : 'none' }} />
+            </button>
             <div className="flex items-center gap-3">
               <currentItem.icon className="hidden size-5 shrink-0 md:block" />
               <p className="truncate text-lg font-medium">

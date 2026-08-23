@@ -41,11 +41,11 @@ export function AppSidebar() {
             BlackPearl
           </span>
         </Link>
-        {/* Desktop collapse toggle */}
+        {/* Collapse toggle */}
         <button
           type="button"
           onClick={toggleSidebar}
-          className="hidden md:flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-sidebar-accent transition-colors"
+          className="flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-sidebar-accent transition-colors"
           aria-label={state === 'expanded' ? 'Collapse sidebar' : 'Expand sidebar'}
         >
           {state === 'expanded' ? (
