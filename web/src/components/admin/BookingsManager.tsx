@@ -50,29 +50,29 @@ export function BookingsManager() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8 text-slate-500">Loading...</div>
+          <div className="text-center py-8 text-muted-foreground">Loading...</div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">User</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Type</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Title</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Amount</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Date</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Status</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Actions</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">User</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Type</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Title</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Amount</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Date</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {bookings.map((booking) => (
-                    <tr key={booking.id} className="border-b hover:bg-slate-50">
+                    <tr key={booking.id} className="border-b hover:bg-accent">
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-medium">{booking.user?.full_name || 'N/A'}</p>
-                          <p className="text-sm text-slate-500">{booking.user?.email}</p>
+                          <p className="text-sm text-muted-foreground">{booking.user?.email}</p>
                         </div>
                       </td>
                       <td className="py-3 px-4">
@@ -84,7 +84,7 @@ export function BookingsManager() {
                         {booking.deal?.title || booking.custom_package?.title || 'N/A'}
                       </td>
                       <td className="py-3 px-4">{formatCurrency(booking.total_amount)}</td>
-                      <td className="py-3 px-4 text-slate-600">
+                      <td className="py-3 px-4 text-muted-foreground">
                         {formatDate(booking.booked_at)}
                       </td>
                       <td className="py-3 px-4">
@@ -118,7 +118,7 @@ export function BookingsManager() {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 Page {page} of {totalPages}
               </p>
               <div className="flex gap-2">

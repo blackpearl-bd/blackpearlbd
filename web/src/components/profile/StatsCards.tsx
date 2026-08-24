@@ -16,7 +16,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
         <CardContent className="p-6">
           <div className="text-center">
             <p className="text-3xl font-bold text-primary">{stats.totalTours}</p>
-            <p className="text-slate-600">Total Tours</p>
+            <p className="text-muted-foreground">Total Tours</p>
           </div>
         </CardContent>
       </Card>
@@ -25,17 +25,17 @@ export function StatsCards({ stats }: StatsCardsProps) {
       <Card>
         <CardContent className="p-6">
           <div className="text-center">
-            <p className="text-3xl font-bold text-secondary">🐚 {stats.pearls}</p>
-            <p className="text-slate-600">Pearls</p>
+            <p className="text-3xl font-bold text-primary">🐚 {stats.pearls}</p>
+            <p className="text-muted-foreground">Pearls</p>
             {tierInfo.next && (
               <div className="mt-2">
-                <div className="w-full bg-slate-200 rounded-full h-2">
+                <div className="w-full bg-muted rounded-full h-2">
                   <div
-                    className="bg-secondary h-2 rounded-full"
+                    className="bg-primary h-2 rounded-full"
                     style={{ width: `${tierInfo.progress}%` }}
                   />
                 </div>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {tierInfo.needed} more to {tierInfo.next}
                 </p>
               </div>
@@ -51,8 +51,8 @@ export function StatsCards({ stats }: StatsCardsProps) {
             <p className={`text-2xl font-bold ${getTierColor(stats.status)}`}>
               {stats.status.charAt(0).toUpperCase() + stats.status.slice(1)}
             </p>
-            <p className="text-slate-600">Status</p>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-muted-foreground">Status</p>
+            <p className="text-xs text-muted-foreground mt-1">
               {tierInfo.current} Tier
             </p>
           </div>

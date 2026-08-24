@@ -23,10 +23,10 @@ export function formatCurrency(amount: number) {
 
 export function getTierColor(status: string) {
   switch (status) {
-    case 'diamond': return 'bg-pearl-diamond text-slate-900';
-    case 'gold': return 'bg-pearl-gold text-slate-900';
-    case 'platinum': return 'bg-pearl-platinum text-slate-900';
-    case 'bronze': return 'bg-pearl-bronze text-white';
+    case 'diamond': return 'bg-white text-black border border-black/10';
+    case 'gold': return 'bg-neutral-200 text-black';
+    case 'platinum': return 'bg-neutral-400 text-white';
+    case 'bronze': return 'bg-neutral-700 text-white';
     default: return 'bg-slate-300 text-slate-700';
   }
 }

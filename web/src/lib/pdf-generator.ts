@@ -8,16 +8,16 @@ export function generateInvoicePDF(booking: Booking) {
 
   // Header
   doc.setFontSize(28);
-  doc.setTextColor(15, 23, 42); // #0F172A
+  doc.setTextColor(0, 0, 0); // black
   doc.text('BlackPearl', pageWidth / 2, 25, { align: 'center' });
   
   doc.setFontSize(10);
-  doc.setTextColor(100, 116, 139); // #64748B
+  doc.setTextColor(117, 117, 117); // gray
   doc.text('Tours & Travel Agency', pageWidth / 2, 32, { align: 'center' });
 
   // Invoice info
   doc.setFontSize(10);
-  doc.setTextColor(15, 23, 42);
+  doc.setTextColor(0, 0, 0);
   doc.text(`Invoice #: ${booking.invoice_number || 'N/A'}`, 20, 50);
   doc.text(`Date: ${new Date(booking.booked_at).toLocaleDateString()}`, 20, 57);
   
@@ -25,18 +25,18 @@ export function generateInvoicePDF(booking: Booking) {
   doc.text(`Booking Status: ${booking.status.toUpperCase()}`, pageWidth - 20, 57, { align: 'right' });
 
   // Divider
-  doc.setDrawColor(20, 184, 166); // #14B8A6
+  doc.setDrawColor(0, 0, 0); // black divider
   doc.setLineWidth(0.5);
   doc.line(20, 65, pageWidth - 20, 65);
 
   // Customer Details
   doc.setFontSize(14);
-  doc.setTextColor(15, 23, 42);
+  doc.setTextColor(0, 0, 0);
   doc.text('Customer Details', 20, 78);
 
   const travelerDetails = (booking.traveler_details || {}) as Record<string, string>;
   doc.setFontSize(10);
-  doc.setTextColor(100, 116, 139);
+  doc.setTextColor(117, 117, 117);
   
   const customerInfo = [
     ['Name', travelerDetails.name || 'N/A'],
@@ -57,7 +57,7 @@ export function generateInvoicePDF(booking: Booking) {
   // Booking Details
   const bookingY = (doc as any).lastAutoTable?.finalY || 120;
   doc.setFontSize(14);
-  doc.setTextColor(15, 23, 42);
+  doc.setTextColor(0, 0, 0);
   doc.text('Booking Details', 20, bookingY + 10);
 
   const bookingType = booking.booking_type === 'deal' ? 'Tour Deal' : 'Custom Package';
@@ -85,7 +85,7 @@ export function generateInvoicePDF(booking: Booking) {
   // Price Breakdown
   const priceY = (doc as any).lastAutoTable?.finalY || 180;
   doc.setFontSize(14);
-  doc.setTextColor(15, 23, 42);
+  doc.setTextColor(0, 0, 0);
   doc.text('Price Breakdown', 20, priceY + 10);
 
   const priceInfo = [
@@ -106,14 +106,14 @@ export function generateInvoicePDF(booking: Booking) {
   // Total
   const totalY = (doc as any).lastAutoTable?.finalY || 230;
   doc.setFontSize(12);
-  doc.setTextColor(15, 23, 42);
+  doc.setTextColor(0, 0, 0);
   doc.text('Total Amount:', 20, totalY + 10);
   doc.setFontSize(14);
   doc.text(`₹${booking.total_amount.toLocaleString()}`, pageWidth - 20, totalY + 10, { align: 'right' });
 
   // Footer
   doc.setFontSize(10);
-  doc.setTextColor(100, 116, 139);
+  doc.setTextColor(117, 117, 117);
   doc.text('Thank you for choosing BlackPearl! 🐚', pageWidth / 2, 270, { align: 'center' });
   doc.text('For queries, contact us at support@blackpearl.travel', pageWidth / 2, 277, { align: 'center' });
 

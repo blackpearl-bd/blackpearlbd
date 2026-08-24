@@ -1,11 +1,27 @@
-import { useState, useEffect, useRef } from 'react'
-import { useLocation, Link } from 'react-router-dom'
-import { Search, Bell, User, ChevronsRight, X, LogOut, Settings } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { cn } from '@/lib/utils'
+import {
+  Search,
+  User,
+  Settings,
+  LogOut,
+  Home,
+  Compass,
+  Package,
+  LayoutDashboard,
+  Users,
+  Calendar,
+  MapPin,
+  HelpCircle,
+  Sun,
+  Moon,
+  Monitor,
+  Phone,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-import { getNavigationGroups } from '@/config/navigation'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { useSidebar } from '@/components/ui/sidebar'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,225 +31,306 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  CommandPalette,
+  type CommandItem,
+} from '@/components/ui/command-palette'
+import { NavigationSelect } from './NavigationSelect'
+import { useTheme } from '@/lib/theme-provider'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { SlideActionButton } from '@/components/ui/slide-action-button'
 
-export function AppTopbar() {
+function useCommandPaletteItems() {
+  const navigate = useNavigate()
+  const { isAdmin, logout } = useAuth()
+
+  const items: CommandItem[] = [
+    {
+      id: 'home',
+      label: 'Home',
+      group: 'Navigation',
+      icon: Home as LucideIcon,
+      hint: '/',
+      onSelect: () => navigate('/'),
+    },
+    {
+      id: 'deals',
+      label: 'Tour Deals',
+      group: 'Navigation',
+      icon: Compass as LucideIcon,
+      hint: '/deals',
+      onSelect: () => navigate('/deals'),
+    },
+    {
+      id: 'build-package',
+      label: 'Build Package',
+      group: 'Navigation',
+      icon: Package as LucideIcon,
+      hint: '/build-package',
+      onSelect: () => navigate('/build-package'),
+    },
+    {
+      id: 'profile',
+      label: 'My Profile',
+      group: 'Navigation',
+      icon: User as LucideIcon,
+      hint: '/profile',
+      onSelect: () => navigate('/profile'),
+    },
+  ]
+
+  if (isAdmin) {
+    items.push(
+      {
+        id: 'admin-dashboard',
+        label: 'Admin Dashboard',
+        group: 'Admin',
+        icon: LayoutDashboard as LucideIcon,
+        hint: '/admin',
+        onSelect: () => navigate('/admin'),
+      },
+      {
+        id: 'admin-users',
+        label: 'Manage Users',
+        group: 'Admin',
+        icon: Users as LucideIcon,
+        hint: '/admin/users',
+        onSelect: () => navigate('/admin/users'),
+      },
+      {
+        id: 'admin-deals',
+        label: 'Manage Deals',
+        group: 'Admin',
+        icon: Package as LucideIcon,
+        hint: '/admin/deals',
+        onSelect: () => navigate('/admin/deals'),
+      },
+      {
+        id: 'admin-bookings',
+        label: 'Manage Bookings',
+        group: 'Admin',
+        icon: Calendar as LucideIcon,
+        hint: '/admin/bookings',
+        onSelect: () => navigate('/admin/bookings'),
+      },
+      {
+        id: 'admin-packages',
+        label: 'Custom Packages',
+        group: 'Admin',
+        icon: MapPin as LucideIcon,
+        hint: '/admin/custom-packages',
+        onSelect: () => navigate('/admin/custom-packages'),
+      },
+    )
+  }
+
+  items.push({
+    id: 'help',
+    label: 'Help & Support',
+    group: 'Actions',
+    icon: HelpCircle as LucideIcon,
+    onSelect: () => window.open('https://blackpearl.travel/support', '_blank'),
+  })
+
+  items.push({
+    id: 'logout',
+    label: 'Log Out',
+    group: 'Actions',
+    icon: LogOut as LucideIcon,
+    onSelect: () => {
+      logout()
+      navigate('/')
+    },
+  })
+
+  return items
+}
+
+export function AppTopbar({ className }: { className?: string }) {
   const { user, profile, isAdmin, logout } = useAuth()
-  const { state, isMobile, openMobile, setOpenMobile, toggleSidebar } = useSidebar()
-  const { pathname } = useLocation()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
-  const searchInputRef = useRef<HTMLInputElement>(null)
-  const mobileSearchInputRef = useRef<HTMLInputElement>(null)
+  const { theme, setTheme } = useTheme()
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [callOpen, setCallOpen] = useState(false)
+  const commandItems = useCommandPaletteItems()
 
-  // Get current page name from navigation
-  const navigationGroups = getNavigationGroups(isAdmin)
-  const currentItem = navigationGroups
-    .flatMap((group) => group.items)
-    .find((item) => item.href === pathname) ?? navigationGroups[0].items[0]
-
-  const openMobileSearch = () => {
-    setIsMobileSearchOpen(true)
-    requestAnimationFrame(() => {
-      mobileSearchInputRef.current?.focus()
-    })
-  }
-
-  const closeMobileSearch = () => {
-    setIsMobileSearchOpen(false)
-  }
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-        event.preventDefault()
-        if (window.matchMedia('(width < 48rem)').matches) {
-          setIsMobileSearchOpen(true)
-          requestAnimationFrame(() => {
-            mobileSearchInputRef.current?.focus()
-          })
-          return
-        }
-        searchInputRef.current?.focus()
-      }
-      if (event.key === 'Escape') {
-        setIsMobileSearchOpen(false)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  const openPalette = useCallback(() => setPaletteOpen(true), [])
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b py-4 px-4 md:h-20 md:pr-8 md:pl-6">
-      {isMobileSearchOpen ? (
-        <div className="flex w-full items-center gap-2 md:hidden">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input
-              ref={mobileSearchInputRef}
-              className="h-11 pl-9 pr-3"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+    <>
+      <CommandPalette
+        items={commandItems}
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        placeholder="Search pages, actions…"
+      />
+
+      <header className={cn("sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between border-b py-4 px-4 md:h-20 md:pr-8 md:pl-6 bg-background", className)}>
+        {/* Left: Navigation select */}
+        <div className="flex shrink-0 items-center z-10">
+          <NavigationSelect className="w-48" />
+        </div>
+
+        {/* Center: BlackPearl logo – absolutely centered in the header */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <Link to="/" className="flex items-center gap-2 pointer-events-auto">
+            <img src="/blackpearl.svg" alt="BlackPearl" className="size-9 shrink-0" />
+            <span className="text-2xl font-semibold tracking-tight">
+              BlackPearl
+            </span>
+          </Link>
+        </div>
+
+        {/* Right: Search + Profile */}
+        <div className="flex shrink-0 items-center gap-2 z-10">
+          {/* Call button */}
+          <Popover open={callOpen} onOpenChange={setCallOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="!h-11 !w-11 rounded-lg hidden md:flex"
+                aria-label="Call us"
+              >
+                <Phone className="size-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              side="bottom"
+              align="end"
+              sideOffset={8}
+              className="w-auto p-4"
+            >
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-sm font-medium text-foreground">
+                  Slide to call us
+                </p>
+                <SlideActionButton
+                  completeLabel="Calling…"
+                  onComplete={() => {
+                    window.location.href = 'tel:+8801928319460'
+                  }}
+                >
+                  Call +880 192-831-9460
+                </SlideActionButton>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* Search button — opens command palette */}
           <Button
             type="button"
             variant="outline"
-            className="size-11 shrink-0"
-            onClick={closeMobileSearch}
+            size="icon"
+            className="!h-11 !w-11 rounded-lg"
+            onClick={openPalette}
+            aria-label="Open search (⌘K)"
           >
-            <X className="size-4" />
+            <Search className="size-5" />
           </Button>
-        </div>
-      ) : (
-        <>
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <Link to="/" className="flex items-center gap-2 shrink-0">
-              <img src="/blackpearl.svg" alt="BlackPearl" className="w-8 h-8 shrink-0" />
-              <span className="truncate text-xl font-semibold tracking-tight">
-                BlackPearl
-              </span>
-            </Link>
-            <div className="hidden h-6 w-px bg-border md:block" />
-            <button
-              type="button"
-              onClick={() => {
-                if (isMobile) {
-                  setOpenMobile(!openMobile)
-                } else {
-                  toggleSidebar()
-                }
-              }}
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg hover:bg-accent transition-colors"
-              aria-label="Toggle sidebar"
-            >
-              <ChevronsRight className="size-5 text-muted-foreground transition-transform" style={{ transform: (isMobile ? openMobile : state === 'expanded') ? 'rotate(180deg)' : 'none' }} />
-            </button>
-            <div className="hidden h-6 w-px bg-border md:block" />
-            <div className="flex items-center gap-2">
-              <currentItem.icon className="size-4 shrink-0 text-muted-foreground" />
-              <p className="truncate text-base font-medium text-muted-foreground">
-                {currentItem.name}
-              </p>
-            </div>
-          </div>
 
-          <div className="flex shrink-0 items-center gap-2">
-            <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                ref={searchInputRef}
-                className="h-11 w-70 pl-9 pr-3"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="size-11 rounded-lg md:hidden"
-              onClick={openMobileSearch}
-            >
-              <Search className="size-4" />
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-auto gap-2 px-0 aria-expanded:bg-transparent hover:bg-transparent"
-                >
-                  {profile?.avatar_url ? (
-                    <img
-                      src={profile.avatar_url}
-                      alt=""
-                      className="size-11 rounded-lg bg-muted object-cover"
-                    />
-                  ) : (
-                    <div className="size-11 rounded-lg bg-muted flex items-center justify-center">
-                      <User className="size-5 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="hidden flex-col items-start gap-1 text-left md:flex">
-                    <span className="text-base font-medium leading-none">
-                      {profile?.full_name || 'User'}
-                    </span>
-                    <span className="flex items-center gap-1.5 text-sm leading-none text-muted-foreground">
-                      {isAdmin && (
-                        <>
-                          Admin
-                          <span
-                            aria-hidden
-                            className="block size-1.5 shrink-0 rounded-full bg-muted-foreground/50"
-                          />
-                        </>
-                      )}
-                      {user?.email}
-                    </span>
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-72 p-0">
-                <div className="space-y-3 p-3">
-                  <div className="space-y-2">
-                    <div className="flex items-start gap-3">
-                      {profile?.avatar_url ? (
-                        <img
-                          src={profile.avatar_url}
-                          alt=""
-                          className="size-10 rounded-lg bg-muted object-cover"
-                        />
-                      ) : (
-                        <div className="size-10 rounded-lg bg-muted flex items-center justify-center">
-                          <User className="size-5 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="min-w-0 space-y-1">
-                        <p className="truncate text-sm font-medium">
-                          {profile?.full_name || 'User'}
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {user?.email}
-                        </p>
-                        {isAdmin && (
-                          <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                            Admin
-                          </span>
-                        )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="!h-11 !w-11 rounded-lg px-0 aria-expanded:bg-transparent hover:bg-accent"
+              >
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt=""
+                    className="!size-11 rounded-lg bg-muted object-cover"
+                  />
+                ) : (
+                  <User className="size-5 text-muted-foreground" />
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-72 p-0">
+              <div className="space-y-3 p-3">
+                <div className="space-y-2">
+                  <div className="flex items-start gap-3">
+                    {profile?.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt=""
+                        className="size-10 rounded-lg bg-muted object-cover"
+                      />
+                    ) : (
+                      <div className="size-10 rounded-lg bg-muted flex items-center justify-center">
+                        <User className="size-5 text-muted-foreground" />
                       </div>
+                    )}
+                    <div className="min-w-0 space-y-1">
+                      <p className="truncate text-sm font-medium">
+                        {profile?.full_name || 'User'}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {user?.email}
+                      </p>
+                      {isAdmin && (
+                        <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                          Admin
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup className="p-1">
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile">
-                      <User className="size-4" />
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile">
-                      <Settings className="size-4" />
-                      Settings
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} variant="destructive" className="p-1 m-1">
-                  <LogOut className="size-4" />
-                  Logout
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup className="p-1">
+                <DropdownMenuItem asChild>
+                  <Link to="/profile">
+                    <User className="size-4" />
+                    Profile
+                  </Link>
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </>
-      )}
-    </header>
+                <DropdownMenuItem asChild>
+                  <Link to="/profile">
+                    <Settings className="size-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup className="p-1">
+                <DropdownMenuItem
+                  onClick={() => setTheme('light')}
+                  className={cn(theme === 'light' && 'bg-accent text-accent-foreground')}
+                >
+                  <Sun className="size-4" />
+                  Light
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setTheme('dark')}
+                  className={cn(theme === 'dark' && 'bg-accent text-accent-foreground')}
+                >
+                  <Moon className="size-4" />
+                  Dark
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setTheme('system')}
+                  className={cn(theme === 'system' && 'bg-accent text-accent-foreground')}
+                >
+                  <Monitor className="size-4" />
+                  System
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={logout} variant="destructive" className="p-1 m-1">
+                <LogOut className="size-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </header>
+    </>
   )
 }

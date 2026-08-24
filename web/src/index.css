@@ -3,27 +3,61 @@
 @tailwind utilities;
 
 @layer base {
+  /* ── Light mode (default) ─────────────────────────────────── */
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 224 20% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 224 20% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 170 76% 40%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 351 89% 60%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 170 76% 40%;
+    --popover-foreground: 224 20% 10%;
+    --primary: 0 0% 0%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 224 20% 10%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 40%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 224 20% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 0 0% 0%;
     --radius: 0.5rem;
+  }
+
+  /* ── Hero / large-fill surfaces ────────────────────────────── */
+  :root {
+    --hero: 224 20% 10%;
+    --hero-foreground: 0 0% 100%;
+  }
+  .dark {
+    --hero: 224 20% 10%;
+    --hero-foreground: 0 0% 100%;
+  }
+
+  /* ── Dark mode ────────────────────────────────────────────── */
+  .dark {
+    --background: 224 20% 7%;
+    --foreground: 210 20% 94%;
+    --card: 224 18% 11%;
+    --card-foreground: 210 20% 94%;
+    --popover: 224 18% 11%;
+    --popover-foreground: 210 20% 94%;
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 224 15% 15%;
+    --secondary-foreground: 210 20% 94%;
+    --muted: 224 15% 15%;
+    --muted-foreground: 220 10% 52%;
+    --accent: 224 15% 15%;
+    --accent-foreground: 210 20% 94%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 224 12% 18%;
+    --input: 224 12% 18%;
+    --ring: 0 0% 100%;
   }
 
   * {
@@ -32,5 +66,15 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

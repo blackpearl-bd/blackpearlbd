@@ -49,7 +49,7 @@ export function CascadingSelect({ value, onChange }: CascadingSelectProps) {
   };
 
   if (loading) {
-    return <div className="text-slate-500">Loading destinations...</div>;
+    return <div className="text-muted-foreground">Loading destinations...</div>;
   }
 
   return (

@@ -22,7 +22,7 @@ export default function BuildPackage() {
             <h2 className="text-2xl font-bold text-primary mb-4">
               Sign in to Build Your Package
             </h2>
-            <p className="text-slate-600 mb-6">
+            <p className="text-muted-foreground mb-6">
               Create your custom travel package by signing in with Google
             </p>
             <GoogleSignIn />
@@ -36,7 +36,7 @@ export default function BuildPackage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-primary mb-2">Build Your Package</h1>
-        <p className="text-slate-600">Create a custom travel package tailored to your preferences</p>
+        <p className="text-muted-foreground">Create a custom travel package tailored to your preferences</p>
       </div>
       <PackageBuilderForm />
     </div>

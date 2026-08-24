@@ -87,13 +87,13 @@ export default function Deals() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-primary mb-2">Tour Deals</h1>
-        <p className="text-slate-600">Explore our curated tour packages</p>
+        <p className="text-muted-foreground">Explore our curated tour packages</p>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search by destination or title..."
             value={search}
@@ -131,7 +131,7 @@ export default function Deals() {
       {/* Results */}
       {filteredDeals.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-slate-500 text-lg">No deals found matching your criteria</p>
+          <p className="text-muted-foreground text-lg">No deals found matching your criteria</p>
         </div>
       ) : (
         <DealGrid deals={filteredDeals} onSave={handleSave} />

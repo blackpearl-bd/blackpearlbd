@@ -10,7 +10,7 @@ interface OthersSectionProps {
 export function OthersSection({ bookings }: OthersSectionProps) {
   if (bookings.length === 0) {
     return (
-      <p className="text-center text-slate-500 py-8">
+      <p className="text-center text-muted-foreground py-8">
         No pending, processing, or rejected bookings
       </p>
     );
@@ -31,10 +31,10 @@ export function OthersSection({ bookings }: OthersSectionProps) {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Badge variant="outline">{type}</Badge>
-                    <span className="text-sm text-slate-600">{destination}</span>
+                    <span className="text-sm text-muted-foreground">{destination}</span>
                   </div>
                   <h4 className="font-semibold text-primary">{title}</h4>
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-sm text-muted-foreground mt-1">
                     {formatDate(date)} • {formatCurrency(booking.total_amount)}
                   </p>
                 </div>

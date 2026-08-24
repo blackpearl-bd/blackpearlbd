@@ -27,13 +27,13 @@ function TourCard({ booking }: { booking: Booking }) {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <MapPin className="w-4 h-4 text-secondary" />
-              <span className="text-sm text-slate-600">{destination}</span>
+              <span className="text-sm text-muted-foreground">{destination}</span>
             </div>
             <h4 className="font-semibold text-primary">{title}</h4>
-            <div className="flex items-center gap-2 mt-2 text-sm text-slate-500">
+            <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
               <span>{date}</span>
-              <span className="text-slate-300">•</span>
+              <span className="text-primary-foreground/70">•</span>
               <span>{formatCurrency(booking.total_amount)}</span>
             </div>
           </div>
@@ -84,7 +84,7 @@ export function ToursSection({ tours }: ToursSectionProps) {
       
       <TabsContent value="upcoming" className="mt-4">
         {upcomingTours.length === 0 ? (
-          <p className="text-center text-slate-500 py-8">No upcoming tours</p>
+          <p className="text-center text-muted-foreground py-8">No upcoming tours</p>
         ) : (
           upcomingTours.map((tour) => <TourCard key={tour.id} booking={tour} />)
         )}
@@ -92,7 +92,7 @@ export function ToursSection({ tours }: ToursSectionProps) {
       
       <TabsContent value="current" className="mt-4">
         {currentTours.length === 0 ? (
-          <p className="text-center text-slate-500 py-8">No current tours</p>
+          <p className="text-center text-muted-foreground py-8">No current tours</p>
         ) : (
           currentTours.map((tour) => <TourCard key={tour.id} booking={tour} />)
         )}
@@ -100,7 +100,7 @@ export function ToursSection({ tours }: ToursSectionProps) {
       
       <TabsContent value="past" className="mt-4">
         {pastTours.length === 0 ? (
-          <p className="text-center text-slate-500 py-8">No past tours</p>
+          <p className="text-center text-muted-foreground py-8">No past tours</p>
         ) : (
           pastTours.map((tour) => <TourCard key={tour.id} booking={tour} />)
         )}

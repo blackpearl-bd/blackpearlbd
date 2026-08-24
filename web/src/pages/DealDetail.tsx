@@ -18,7 +18,7 @@ export default function DealDetailPage() {
   if (!deal) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-500">Deal not found</p>
+        <p className="text-muted-foreground">Deal not found</p>
       </div>
     );
   }

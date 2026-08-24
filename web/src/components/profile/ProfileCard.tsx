@@ -22,8 +22,8 @@ export function ProfileCard({ profile }: ProfileCardProps) {
                 className="w-24 h-24 rounded-full object-cover"
               />
             ) : (
-              <div className="w-24 h-24 bg-slate-200 rounded-full flex items-center justify-center">
-                <User className="w-12 h-12 text-slate-400" />
+              <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center">
+                <User className="w-12 h-12 text-muted-foreground" />
               </div>
             )}
           </div>
@@ -33,15 +33,15 @@ export function ProfileCard({ profile }: ProfileCardProps) {
             <h2 className="text-2xl font-bold text-primary mb-1">
               {profile.full_name || 'User'}
             </h2>
-            <p className="text-slate-600 mb-4">{profile.email}</p>
+            <p className="text-muted-foreground mb-4">{profile.email}</p>
             
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-slate-500">Phone:</span>
+                <span className="text-muted-foreground">Phone:</span>
                 <p className="font-medium">{profile.phone || 'Not provided'}</p>
               </div>
               <div>
-                <span className="text-slate-500">Address:</span>
+                <span className="text-muted-foreground">Address:</span>
                 <p className="font-medium">{profile.address || 'Not provided'}</p>
               </div>
             </div>

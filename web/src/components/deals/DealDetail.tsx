@@ -54,10 +54,10 @@ export function DealDetail({ deal }: DealDetailProps) {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="w-5 h-5 text-secondary" />
-            <span className="text-slate-600">{deal.destination}</span>
+            <span className="text-muted-foreground">{deal.destination}</span>
           </div>
           <h1 className="text-3xl font-bold text-primary mb-2">{deal.title}</h1>
-          <div className="flex items-center gap-4 text-sm text-slate-500">
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center">
               <Calendar className="w-4 h-4 mr-1" />
               {deal.duration_days} {deal.duration_days === 1 ? 'Day' : 'Days'}
@@ -77,7 +77,7 @@ export function DealDetail({ deal }: DealDetailProps) {
               {formatCurrency(deal.price)}
             </span>
             {deal.original_price && deal.original_price > deal.price && (
-              <span className="text-lg text-slate-400 line-through ml-2">
+              <span className="text-lg text-muted-foreground line-through ml-2">
                 {formatCurrency(deal.original_price)}
               </span>
             )}
@@ -113,7 +113,7 @@ export function DealDetail({ deal }: DealDetailProps) {
           <CardTitle>About this tour</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-slate-600 whitespace-pre-wrap">{deal.description}</p>
+          <p className="text-muted-foreground whitespace-pre-wrap">{deal.description}</p>
         </CardContent>
       </Card>
 
@@ -128,7 +128,7 @@ export function DealDetail({ deal }: DealDetailProps) {
               {deal.itinerary.map((day) => (
                 <div key={day.day} className="border-l-2 border-secondary pl-4">
                   <h4 className="font-semibold text-primary">Day {day.day}: {day.title}</h4>
-                  <p className="text-slate-600 mt-1">{day.description}</p>
+                  <p className="text-muted-foreground mt-1">{day.description}</p>
                 </div>
               ))}
             </div>

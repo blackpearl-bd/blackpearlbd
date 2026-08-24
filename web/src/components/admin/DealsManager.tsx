@@ -137,22 +137,22 @@ export function DealsManager() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8 text-slate-500">Loading...</div>
+          <div className="text-center py-8 text-muted-foreground">Loading...</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-semibold text-slate-600">Title</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-600">Destination</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-600">Price</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-600">Duration</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-600">Actions</th>
+                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Title</th>
+                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Destination</th>
+                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Price</th>
+                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Duration</th>
+                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {deals.map((deal) => (
-                  <tr key={deal.id} className="border-b hover:bg-slate-50">
+                  <tr key={deal.id} className="border-b hover:bg-accent">
                     <td className="py-3 px-4">
                       <div>
                         <span className="font-medium">{deal.title}</span>
@@ -163,7 +163,7 @@ export function DealsManager() {
                         )}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-slate-600">{deal.destination}</td>
+                    <td className="py-3 px-4 text-muted-foreground">{deal.destination}</td>
                     <td className="py-3 px-4">{formatCurrency(deal.price)}</td>
                     <td className="py-3 px-4">{deal.duration_days} days</td>
                     <td className="py-3 px-4">

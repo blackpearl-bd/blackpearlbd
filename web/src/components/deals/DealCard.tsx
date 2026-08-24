@@ -25,7 +25,7 @@ export function DealCard({ deal, isSaved = false, onSave }: DealCardProps) {
           className="w-full h-48 object-cover"
         />
         {deal.is_featured && (
-          <Badge className="absolute top-2 left-2 bg-secondary">
+          <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
             Featured
           </Badge>
         )}
@@ -37,7 +37,7 @@ export function DealCard({ deal, isSaved = false, onSave }: DealCardProps) {
       </div>
       
       <CardContent className="p-4">
-        <div className="flex items-center text-sm text-slate-500 mb-2">
+        <div className="flex items-center text-sm text-muted-foreground mb-2">
           <MapPin className="w-4 h-4 mr-1" />
           {deal.destination}
         </div>
@@ -46,11 +46,11 @@ export function DealCard({ deal, isSaved = false, onSave }: DealCardProps) {
           {deal.title}
         </h3>
         
-        <p className="text-sm text-slate-600 mb-3 line-clamp-2">
+        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
           {deal.short_description || deal.description}
         </p>
         
-        <div className="flex items-center text-sm text-slate-500 mb-4">
+        <div className="flex items-center text-sm text-muted-foreground mb-4">
           <Clock className="w-4 h-4 mr-1" />
           {deal.duration_days} {deal.duration_days === 1 ? 'Day' : 'Days'}
         </div>
@@ -61,7 +61,7 @@ export function DealCard({ deal, isSaved = false, onSave }: DealCardProps) {
               {formatCurrency(deal.price)}
             </span>
             {deal.original_price && deal.original_price > deal.price && (
-              <span className="text-sm text-slate-400 line-through ml-2">
+              <span className="text-sm text-muted-foreground line-through ml-2">
                 {formatCurrency(deal.original_price)}
               </span>
             )}

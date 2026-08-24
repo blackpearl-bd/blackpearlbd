@@ -71,9 +71,9 @@ export function BookingModal({ isOpen, onClose, deal }: BookingModalProps) {
 
         <div className="space-y-4">
           {/* Deal Summary */}
-          <div className="bg-slate-50 p-4 rounded-lg">
+          <div className="bg-accent p-4 rounded-lg">
             <h4 className="font-semibold text-primary">{deal.title}</h4>
-            <p className="text-sm text-slate-600">{deal.destination}</p>
+            <p className="text-sm text-muted-foreground">{deal.destination}</p>
             <p className="text-lg font-bold text-primary mt-2">
               {formatCurrency(deal.price)}
             </p>

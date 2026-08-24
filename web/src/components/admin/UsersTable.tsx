@@ -17,7 +17,7 @@ export function UsersTable() {
       <CardHeader>
         <CardTitle>Users ({total})</CardTitle>
         <div className="flex items-center space-x-2">
-          <Search className="w-4 h-4 text-slate-500" />
+          <Search className="w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search users..."
             value={search}
@@ -31,35 +31,35 @@ export function UsersTable() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8 text-slate-500">Loading...</div>
+          <div className="text-center py-8 text-muted-foreground">Loading...</div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Name</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Email</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Role</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Pearls</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Status</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Joined</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Name</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Email</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Role</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Pearls</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Joined</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((user) => (
-                    <tr key={user.id} className="border-b hover:bg-slate-50">
+                    <tr key={user.id} className="border-b hover:bg-accent">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           {user.avatar_url ? (
                             <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full" />
                           ) : (
-                            <div className="w-8 h-8 bg-slate-200 rounded-full" />
+                            <div className="w-8 h-8 bg-muted rounded-full" />
                           )}
                           <span className="font-medium">{user.full_name || 'N/A'}</span>
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-slate-600">{user.email}</td>
+                      <td className="py-3 px-4 text-muted-foreground">{user.email}</td>
                       <td className="py-3 px-4">
                         <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
                           {user.role}
@@ -71,7 +71,7 @@ export function UsersTable() {
                           {user.status}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-slate-600">
+                      <td className="py-3 px-4 text-muted-foreground">
                         {formatDate(user.created_at)}
                       </td>
                     </tr>
@@ -82,7 +82,7 @@ export function UsersTable() {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 Page {page} of {totalPages}
               </p>
               <div className="flex gap-2">

@@ -46,7 +46,7 @@ export function AdminStatsCards({ stats }: AdminStatsCardsProps) {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600">{card.title}</p>
+                <p className="text-sm text-muted-foreground">{card.title}</p>
                 <p className="text-2xl font-bold text-primary">{card.value}</p>
               </div>
               <div className={`p-3 rounded-full ${card.bg}`}>

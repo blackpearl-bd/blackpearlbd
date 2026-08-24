@@ -17,7 +17,7 @@ export default function ProfilePage() {
   if (!profile || !stats) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-500">Failed to load profile</p>
+        <p className="text-muted-foreground">Failed to load profile</p>
       </div>
     );
   }
@@ -55,7 +55,7 @@ export default function ProfilePage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Saved Deals
-            <span className="text-sm font-normal text-slate-500">(Bookmarks)</span>
+            <span className="text-sm font-normal text-muted-foreground">(Bookmarks)</span>
           </CardTitle>
         </CardHeader>
         <CardContent>

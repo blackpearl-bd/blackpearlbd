@@ -11,7 +11,7 @@ export function BudgetInput({ value, onChange }: BudgetInputProps) {
     <div>
       <Label htmlFor="budget">Budget (₹)</Label>
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">₹</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
         <Input
           id="budget"
           type="number"

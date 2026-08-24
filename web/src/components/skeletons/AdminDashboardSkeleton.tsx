@@ -5,7 +5,7 @@ export function AdminDashboardSkeleton() {
   return (
     <div className="flex min-h-screen">
       {/* Sidebar skeleton */}
-      <div className="w-64 bg-white border-r border-slate-200 p-4 space-y-4">
+      <div className="w-64 bg-background border-r border-border p-4 space-y-4">
         <Skeleton className="h-8 w-20" />
         <Skeleton className="h-5 w-28" />
         <div className="space-y-1 mt-4">

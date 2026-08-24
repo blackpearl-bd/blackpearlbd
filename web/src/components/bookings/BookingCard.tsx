@@ -23,10 +23,10 @@ export function BookingCard({ booking }: BookingCardProps) {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <MapPin className="w-4 h-4 text-secondary" />
-              <span className="text-sm text-slate-600">{destination}</span>
+              <span className="text-sm text-muted-foreground">{destination}</span>
             </div>
             <h4 className="font-semibold text-primary">{title}</h4>
-            <div className="flex items-center gap-2 mt-2 text-sm text-slate-500">
+            <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
               <Calendar className="w-4 h-4" />
               <span>{formatDate(booking.booked_at)}</span>
               <span className="text-slate-300">•</span>

@@ -29,15 +29,15 @@ export function SavedDealsSection() {
   };
 
   if (isLoading) {
-    return <p className="text-center text-slate-500 py-8">Loading saved deals...</p>;
+    return <p className="text-center text-muted-foreground py-8">Loading saved deals...</p>;
   }
 
   if (savedDeals.length === 0) {
     return (
       <div className="text-center py-12">
-        <Heart className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <p className="text-slate-500 text-lg mb-2">No saved deals yet</p>
-        <p className="text-slate-400 text-sm mb-4">
+        <Heart className="w-12 h-12 text-primary-foreground/70 mx-auto mb-4" />
+        <p className="text-muted-foreground text-lg mb-2">No saved deals yet</p>
+        <p className="text-muted-foreground text-sm mb-4">
           Browse our tour deals and save the ones you like!
         </p>
         <Link to="/deals">
@@ -73,7 +73,7 @@ export function SavedDealsSection() {
                   {/* Content */}
                   <div className="flex-1 p-4 flex flex-col justify-between">
                     <div>
-                      <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                         <MapPin className="w-4 h-4" />
                         {deal.destination}
                       </div>
@@ -83,10 +83,10 @@ export function SavedDealsSection() {
                       >
                         {deal.title}
                       </Link>
-                      <p className="text-sm text-slate-600 mt-1 line-clamp-2">
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                         {deal.short_description || deal.description}
                       </p>
-                      <div className="flex items-center gap-2 text-sm text-slate-500 mt-2">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                         <Clock className="w-4 h-4" />
                         {deal.duration_days} {deal.duration_days === 1 ? 'Day' : 'Days'}
                       </div>
@@ -99,7 +99,7 @@ export function SavedDealsSection() {
                           {formatCurrency(deal.price)}
                         </span>
                         {deal.original_price && deal.original_price > deal.price && (
-                          <span className="text-sm text-slate-400 line-through ml-2">
+                          <span className="text-sm text-muted-foreground line-through ml-2">
                             {formatCurrency(deal.original_price)}
                           </span>
                         )}

@@ -25,22 +25,22 @@ export default function AdminDashboard() {
         </CardHeader>
         <CardContent>
           {recentBookings.length === 0 ? (
-            <p className="text-center text-slate-500 py-8">No recent bookings</p>
+            <p className="text-center text-muted-foreground py-8">No recent bookings</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">User</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Type</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Amount</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Date</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Status</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">User</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Type</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Amount</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Date</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentBookings.map((booking) => (
-                    <tr key={booking.id} className="border-b hover:bg-slate-50">
+                    <tr key={booking.id} className="border-b hover:bg-accent">
                       <td className="py-3 px-4">
                         <p className="font-medium">{booking.user?.full_name || 'N/A'}</p>
                       </td>
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
                         </Badge>
                       </td>
                       <td className="py-3 px-4">{formatCurrency(booking.total_amount)}</td>
-                      <td className="py-3 px-4 text-slate-600">
+                      <td className="py-3 px-4 text-muted-foreground">
                         {formatDate(booking.booked_at)}
                       </td>
                       <td className="py-3 px-4">

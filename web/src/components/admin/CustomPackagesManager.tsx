@@ -44,28 +44,28 @@ export function CustomPackagesManager() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8 text-slate-500">Loading...</div>
+          <div className="text-center py-8 text-muted-foreground">Loading...</div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">User</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Destination</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Budget</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Travel Date</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Status</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-600">Actions</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">User</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Destination</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Budget</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Travel Date</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th>
+                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {customPackages.map((pkg) => (
-                    <tr key={pkg.id} className="border-b hover:bg-slate-50">
+                    <tr key={pkg.id} className="border-b hover:bg-accent">
                       <td className="py-3 px-4">
                         <div>
                           <p className="font-medium">{pkg.user?.full_name || 'N/A'}</p>
-                          <p className="text-sm text-slate-500">{pkg.user?.email}</p>
+                          <p className="text-sm text-muted-foreground">{pkg.user?.email}</p>
                         </div>
                       </td>
                       <td className="py-3 px-4">{pkg.title || 'N/A'}</td>
@@ -91,7 +91,7 @@ export function CustomPackagesManager() {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 Page {page} of {totalPages}
               </p>
               <div className="flex gap-2">
@@ -126,37 +126,37 @@ export function CustomPackagesManager() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-slate-500">User</Label>
+                    <Label className="text-muted-foreground">User</Label>
                     <p className="font-medium">{selectedPackage.user?.full_name}</p>
                   </div>
                   <div>
-                    <Label className="text-slate-500">Email</Label>
+                    <Label className="text-muted-foreground">Email</Label>
                     <p className="font-medium">{selectedPackage.user?.email}</p>
                   </div>
                   <div>
-                    <Label className="text-slate-500">Budget</Label>
+                    <Label className="text-muted-foreground">Budget</Label>
                     <p className="font-medium">{selectedPackage.budget ? formatCurrency(selectedPackage.budget) : 'N/A'}</p>
                   </div>
                   <div>
-                    <Label className="text-slate-500">Travel Date</Label>
+                    <Label className="text-muted-foreground">Travel Date</Label>
                     <p className="font-medium">{selectedPackage.travel_date ? formatDate(selectedPackage.travel_date) : 'N/A'}</p>
                   </div>
                   <div>
-                    <Label className="text-slate-500">Travelers</Label>
+                    <Label className="text-muted-foreground">Travelers</Label>
                     <p className="font-medium">{selectedPackage.num_travelers}</p>
                   </div>
                   <div>
-                    <Label className="text-slate-500">Accommodation</Label>
+                    <Label className="text-muted-foreground">Accommodation</Label>
                     <p className="font-medium capitalize">{selectedPackage.accommodation_type || 'N/A'}</p>
                   </div>
                   <div>
-                    <Label className="text-slate-500">Transport</Label>
+                    <Label className="text-muted-foreground">Transport</Label>
                     <p className="font-medium capitalize">{selectedPackage.transport_type || 'N/A'}</p>
                   </div>
                 </div>
                 {selectedPackage.special_requests && (
                   <div>
-                    <Label className="text-slate-500">Special Requests</Label>
+                    <Label className="text-muted-foreground">Special Requests</Label>
                     <p className="font-medium">{selectedPackage.special_requests}</p>
                   </div>
                 )}

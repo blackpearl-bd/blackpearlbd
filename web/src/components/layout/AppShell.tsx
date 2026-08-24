@@ -1,7 +1,6 @@
-import type { CSSProperties, ReactNode } from 'react'
-import { SidebarProvider } from '@/components/ui/sidebar'
-import { AppSidebar } from './AppSidebar'
+import type { ReactNode } from 'react'
 import { AppTopbar } from './AppTopbar'
+import { MobileDock } from './MobileDock'
 
 type AppShellProps = {
   children: ReactNode
@@ -9,24 +8,15 @@ type AppShellProps = {
 
 export function AppShell({ children }: AppShellProps) {
   return (
-    <SidebarProvider
-      defaultOpen
-      className="h-svh overflow-hidden no-scrollbar"
-      style={
-        {
-          '--sidebar-width': '18.125rem',
-          '--sidebar-width-icon': '4.25rem',
-        } as CSSProperties
-      }
-    >
-      <AppSidebar />
-
-      <main className="flex flex-1 flex-col overflow-hidden">
+    <div className="flex h-svh flex-col overflow-hidden no-scrollbar">
+      <div className="flex-1 overflow-y-auto">
         <AppTopbar />
-        <div className="flex-1 overflow-y-auto">
+        <main className="flex flex-1 flex-col pb-16 md:pb-0">
           {children}
-        </div>
-      </main>
-    </SidebarProvider>
+        </main>
+      </div>
+
+      <MobileDock />
+    </div>
   )
 }
