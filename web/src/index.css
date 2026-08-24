@@ -29,8 +29,8 @@
 
   /* ── Hero / large-fill surfaces ────────────────────────────── */
   :root {
-    --hero: 224 20% 10%;
-    --hero-foreground: 0 0% 100%;
+    --hero: 0 0% 100%;
+    --hero-foreground: 224 20% 10%;
   }
   .dark {
     --hero: 224 20% 10%;

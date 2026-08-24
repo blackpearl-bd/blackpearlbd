@@ -30,13 +30,13 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/deals">
-                <Button size="lg" className="!bg-hero-foreground !text-black hover:!bg-hero-foreground/90 !border-0">
+                <Button size="lg" className="!bg-hero-foreground !text-white hover:!bg-hero-foreground/90 !border-0">
                   Explore Tour Deals
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
               <Link to="/build-package">
-                <Button size="lg" variant="outline" className="!border-hero-foreground/30 !text-hero-foreground hover:!bg-hero-foreground/10">
+                <Button size="lg" variant="outline" className="!border-hero-foreground/30 !text-black hover:!bg-hero-foreground/10">
                   Build Your Package
                 </Button>
               </Link>

@@ -179,6 +179,9 @@ export function AppTopbar({ className }: { className?: string }) {
 
         {/* Right: Navigation select + Search + Profile */}
         <div className="flex shrink-0 items-center gap-2 z-10">
+          {/* Navigation select */}
+          <NavigationSelect className="w-48" />
+
           {/* Call button */}
           <Popover open={callOpen} onOpenChange={setCallOpen}>
             <PopoverTrigger asChild>
@@ -225,9 +228,6 @@ export function AppTopbar({ className }: { className?: string }) {
           >
             <Search className="size-5" />
           </Button>
-
-          {/* Navigation select — right after search */}
-          <NavigationSelect className="w-48" />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

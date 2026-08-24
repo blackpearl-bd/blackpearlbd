@@ -67,7 +67,8 @@ export function NavigationSelect({ className }: { className?: string }) {
           const page = pages.find((p) => p.id === value)
           if (page) navigate(page.href)
         }}
-      >              <SelectTrigger className={cn("hidden md:flex h-11", className)}>
+      >
+        <SelectTrigger className={cn("hidden md:flex h-11 rounded-lg", className)}>
           <div className="flex items-center gap-2">
             <Icon className="size-5 shrink-0 text-muted-foreground" />
             <span>{currentPage.label}</span>

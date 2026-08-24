@@ -11,7 +11,7 @@ Go to **Cloudflare Dashboard → Pages → Create/Configure project**
 | Setting | Value |
 |---------|-------|
 | **Repository** | `blackpearl-bd/blackpearlbd` |
-| **Branch** | `master` |
+| **Branch** | `main` |
 | **Root directory** | `web` |
 | **Build command** | `npm install && npm run build` |
 | **Build output directory** | `dist` |
