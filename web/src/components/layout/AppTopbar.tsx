@@ -169,22 +169,15 @@ export function AppTopbar({ className }: { className?: string }) {
       />
 
       <header className={cn("sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between border-b py-4 px-4 md:h-20 md:pr-8 md:pl-6 bg-background", className)}>
-        {/* Left: Navigation select */}
-        <div className="flex shrink-0 items-center z-10">
-          <NavigationSelect className="w-48" />
-        </div>
+        {/* Left: BlackPearl logo */}
+        <Link to="/" className="flex shrink-0 items-center gap-2 z-10">
+          <img src="/blackpearl.svg" alt="BlackPearl" className="size-9 shrink-0" />
+          <span className="text-2xl font-semibold tracking-tight">
+            BlackPearl
+          </span>
+        </Link>
 
-        {/* Center: BlackPearl logo – absolutely centered in the header */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <Link to="/" className="flex items-center gap-2 pointer-events-auto">
-            <img src="/blackpearl.svg" alt="BlackPearl" className="size-9 shrink-0" />
-            <span className="text-2xl font-semibold tracking-tight">
-              BlackPearl
-            </span>
-          </Link>
-        </div>
-
-        {/* Right: Search + Profile */}
+        {/* Right: Navigation select + Search + Profile */}
         <div className="flex shrink-0 items-center gap-2 z-10">
           {/* Call button */}
           <Popover open={callOpen} onOpenChange={setCallOpen}>
@@ -329,6 +322,8 @@ export function AppTopbar({ className }: { className?: string }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          {/* Navigation select */}
+          <NavigationSelect className="w-48" />
         </div>
       </header>
     </>
