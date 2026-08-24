@@ -123,7 +123,7 @@ export default function Home() {
               Earn pearls with every booking and unlock exclusive benefits.
             </p>
             <Link to="/build-package">
-              <Button size="lg" className="!bg-hero-foreground !text-black hover:!bg-hero-foreground/90 !border-0">
+              <Button size="lg" className="!bg-white !text-black hover:!bg-white/90 !border-0">
                 Build Your Package
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
