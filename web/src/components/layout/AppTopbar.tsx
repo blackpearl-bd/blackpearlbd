@@ -226,6 +226,9 @@ export function AppTopbar({ className }: { className?: string }) {
             <Search className="size-5" />
           </Button>
 
+          {/* Navigation select — right after search */}
+          <NavigationSelect className="w-48" />
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -322,8 +325,6 @@ export function AppTopbar({ className }: { className?: string }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          {/* Navigation select */}
-          <NavigationSelect className="w-48" />
         </div>
       </header>
     </>
