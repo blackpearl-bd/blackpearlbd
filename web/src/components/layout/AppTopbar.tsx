@@ -18,6 +18,9 @@ import {
   Moon,
   Monitor,
   Phone,
+  Bookmark,
+  Trash2,
+  ExternalLink,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
@@ -43,6 +46,11 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { SlideActionButton } from '@/components/ui/slide-action-button'
+import { SwipeableList, type SwipeableListItem } from '@/components/ui/swipeable-list'
+import { useBookmarkStore } from '@/stores/bookmarkStore'
+import { useBookmarkSync } from '@/hooks/useBookmarks';
+
+import { formatCurrency } from '@/lib/utils'
 
 function useCommandPaletteItems() {
   const navigate = useNavigate()
@@ -155,9 +163,39 @@ export function AppTopbar({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [callOpen, setCallOpen] = useState(false)
+  const [bookmarkOpen, setBookmarkOpen] = useState(false)
   const commandItems = useCommandPaletteItems()
+  const { bookmarks, removeBookmark } = useBookmarkStore()
+  const { bookmarkCount } = useBookmarkSync()
 
   const openPalette = useCallback(() => setPaletteOpen(true), [])
+
+  const bookmarkItems: SwipeableListItem[] = bookmarks.map((deal) => ({
+    id: deal.id,
+    title: deal.title,
+    description: deal.destination,
+    meta: formatCurrency(deal.price),
+    leading: (
+      <img
+        src={deal.image_url || '/placeholder-deal.jpg'}
+        alt={deal.title}
+        className="w-12 h-12 rounded-lg object-cover"
+      />
+    ),
+    rightActions: [
+      {
+        id: 'remove',
+        label: 'Remove',
+        icon: <Trash2 className="h-4 w-4" />,
+        tone: 'danger' as const,
+        onClick: () => removeBookmark(deal.id),
+      },
+    ],
+  }))
+
+  const handleBookmarkOpen = useCallback((open: boolean) => {
+    setBookmarkOpen(open)
+  }, [])
 
   return (
     <>
@@ -171,7 +209,7 @@ export function AppTopbar({ className }: { className?: string }) {
       <header className={cn("sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between border-b py-4 px-4 md:h-20 md:pr-8 md:pl-6 bg-background", className)}>
         {/* Left: BlackPearl logo */}
         <Link to="/" className="flex shrink-0 items-center gap-2 z-10">
-          <img src="/blackpearl.svg" alt="BlackPearl" className="size-9 shrink-0" />
+          <img src="/blackpearl.svg" alt="BlackPearl" className="size-9 shrink-0 dark:brightness-0 dark:invert" />
           <span className="text-2xl font-semibold tracking-tight">
             BlackPearl
           </span>
@@ -180,7 +218,7 @@ export function AppTopbar({ className }: { className?: string }) {
         {/* Right: Navigation select + Search + Profile */}
         <div className="flex shrink-0 items-center gap-2 z-10">
           {/* Navigation select */}
-          <NavigationSelect className="w-48" />
+          <NavigationSelect className="w-48" hideMobile />
 
           {/* Call button */}
           <Popover open={callOpen} onOpenChange={setCallOpen}>
@@ -228,6 +266,62 @@ export function AppTopbar({ className }: { className?: string }) {
           >
             <Search className="size-5" />
           </Button>
+
+          {/* Bookmarks button */}
+          <Popover open={bookmarkOpen} onOpenChange={handleBookmarkOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="!h-11 !w-11 rounded-lg relative"
+                aria-label="Open bookmarks"
+              >
+                <Bookmark className="size-5" />
+                {bookmarks.length > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center">
+                    {bookmarks.length > 9 ? '9+' : bookmarks.length}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              side="bottom"
+              align="end"
+              sideOffset={8}
+              className="w-80 p-4"
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-foreground">Bookmarks</h3>
+                  <span className="text-xs text-muted-foreground">
+                    {bookmarks.length} saved
+                  </span>
+                </div>
+                
+                {bookmarks.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Bookmark className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-sm text-muted-foreground">
+                      No bookmarks yet
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Click the bookmark icon on any tour to save it here
+                    </p>
+                  </div>
+                ) : (
+                  <SwipeableList
+                    items={bookmarkItems}
+                    closeOnAction={true}
+                    classNames={{
+                      item: "rounded-lg",
+                      surface: "rounded-lg",
+                    }}
+                  />
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

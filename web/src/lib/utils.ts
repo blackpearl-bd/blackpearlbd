@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { getGeoCurrency, getGeoLocale } from '@/hooks/useGeoLocation';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -13,10 +14,12 @@ export function formatDate(date: string) {
   });
 }
 
-export function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('en-IN', {
+export function formatCurrency(amount: number, currencyCode?: string, locale?: string) {
+  const currency = currencyCode ?? getGeoCurrency();
+  const loc = locale ?? getGeoLocale();
+  return new Intl.NumberFormat(loc, {
     style: 'currency',
-    currency: 'INR',
+    currency,
     maximumFractionDigits: 0,
   }).format(amount);
 }

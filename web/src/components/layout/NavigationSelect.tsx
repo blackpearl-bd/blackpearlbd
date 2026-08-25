@@ -41,7 +41,7 @@ function getCurrentPage(pages: NavPage[], pathname: string): NavPage | undefined
   return pages.find((p) => p.href !== '/' && pathname.startsWith(p.href))
 }
 
-export function NavigationSelect({ className }: { className?: string }) {
+export function NavigationSelect({ className, hideMobile = false }: { className?: string; hideMobile?: boolean }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { isAdmin } = useAuth()
@@ -56,9 +56,11 @@ export function NavigationSelect({ className }: { className?: string }) {
   return (
     <>
       {/* Mobile: icon only, non-clickable */}
-      <div className="flex shrink-0 items-center md:hidden">
-        <Icon className="size-5" />
-      </div>
+      {!hideMobile && (
+        <div className="flex shrink-0 items-center md:hidden">
+          <Icon className="size-5" />
+        </div>
+      )}
 
       {/* Desktop: full select dropdown */}
       <Select

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { DealGrid } from '@/components/deals/DealGrid';
+import Career3, { type JobListing } from '@/components/watermelon-ui/career-3';
 import { useDeals, useSavedDeals } from '@/hooks/useDeals';
 import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DealsPageSkeleton } from '@/components/skeletons/DealCardSkeleton';
 import { Search } from 'lucide-react';
 import { api } from '@/lib/api';
+import { formatCurrency } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
@@ -15,83 +16,89 @@ export default function Deals() {
   const { savedDeals } = useSavedDeals();
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
-  
+
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('newest');
-  const [priceRange, setPriceRange] = useState('all');
 
-  const filteredDeals = useMemo(() => {
-    let result = [...deals];
+  // Derive unique destinations as department tabs
+  const departments = useMemo(() => {
+    const dests = [...new Set(deals.map((d) => d.destination))];
+    return dests.length > 0 ? ['All', ...dests] : ['All'];
+  }, [deals]);
 
-    // Search filter
+  // Map TourDeal → JobListing for Career3
+  const allJobs: JobListing[] = useMemo(() => {
+    return deals.map((deal) => ({
+      id: deal.id,
+      title: deal.title,
+      description: deal.short_description || deal.description || '',
+      location: deal.destination,
+      type: deal.duration_days === 1 ? '1 Day' : `${deal.duration_days} Days`,
+      salaryRange: formatCurrency(deal.price),
+      department: deal.destination,
+      href: `/deals/${deal.slug}`,
+      tags: [
+        deal.is_featured ? 'Featured' : null,
+        deal.original_price && deal.original_price > deal.price
+          ? `${Math.round((1 - deal.price / deal.original_price) * 100)}% OFF`
+          : null,
+      ].filter(Boolean) as string[],
+      deal: deal, // Pass the full deal object for bookmarking
+    }));
+  }, [deals]);
+
+  // Apply search filter
+  const filteredJobs = useMemo(() => {
+    let result = allJobs;
+
     if (search) {
-      const searchLower = search.toLowerCase();
+      const q = search.toLowerCase();
       result = result.filter(
-        (d) =>
-          d.title.toLowerCase().includes(searchLower) ||
-          d.destination.toLowerCase().includes(searchLower)
+        (j) =>
+          j.title.toLowerCase().includes(q) ||
+          j.location.toLowerCase().includes(q) ||
+          j.description.toLowerCase().includes(q)
       );
-    }
-
-    // Price range filter
-    if (priceRange !== 'all') {
-      const [min, max] = priceRange.split('-').map(Number);
-      result = result.filter((d) => d.price >= min && (!max || d.price <= max));
     }
 
     // Sort
     switch (sortBy) {
       case 'price-low':
-        result.sort((a, b) => a.price - b.price);
+        result = [...result].sort((a, b) => {
+          const pa = parseFloat(a.salaryRange.replace(/[^0-9.]/g, ''));
+          const pb = parseFloat(b.salaryRange.replace(/[^0-9.]/g, ''));
+          return pa - pb;
+        });
         break;
       case 'price-high':
-        result.sort((a, b) => b.price - a.price);
+        result = [...result].sort((a, b) => {
+          const pa = parseFloat(a.salaryRange.replace(/[^0-9.]/g, ''));
+          const pb = parseFloat(b.salaryRange.replace(/[^0-9.]/g, ''));
+          return pb - pa;
+        });
         break;
       case 'featured':
-        result.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0));
+        result = [...result].sort(
+          (a, b) => (b.tags?.includes('Featured') ? 1 : 0) - (a.tags?.includes('Featured') ? 1 : 0)
+        );
         break;
       case 'newest':
       default:
-        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        // keep original order (API returns newest first)
+        break;
     }
 
     return result;
-  }, [deals, search, sortBy, priceRange]);
-
-  const handleSave = async (dealId: string) => {
-    if (!isAuthenticated) {
-      toast.error('Please sign in to save deals');
-      return;
-    }
-
-    try {
-      const existing = savedDeals.find((sd) => sd.deal_id === dealId);
-      if (existing) {
-        await api.unsaveDeal(existing.id);
-        toast.success('Deal removed from bookmarks');
-      } else {
-        await api.saveDeal(dealId);
-        toast.success('Deal saved to bookmarks');
-      }
-      queryClient.invalidateQueries({ queryKey: ['saved-deals'] });
-    } catch (error) {
-      toast.error('Failed to update saved deal');
-    }
-  };
+  }, [allJobs, search, sortBy]);
 
   if (isLoading) {
     return <DealsPageSkeleton />;
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-primary mb-2">Tour Deals</h1>
-        <p className="text-muted-foreground">Explore our curated tour packages</p>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* Filters bar */}
+      <div className="flex flex-col md:flex-row gap-4 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -101,7 +108,7 @@ export default function Deals() {
             className="pl-10"
           />
         </div>
-        
+
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Sort by" />
@@ -113,29 +120,19 @@ export default function Deals() {
             <SelectItem value="featured">Featured</SelectItem>
           </SelectContent>
         </Select>
-
-        <Select value={priceRange} onValueChange={setPriceRange}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Price range" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Prices</SelectItem>
-            <SelectItem value="0-5000">Under ₹5,000</SelectItem>
-            <SelectItem value="5000-15000">₹5,000 - ₹15,000</SelectItem>
-            <SelectItem value="15000-30000">₹15,000 - ₹30,000</SelectItem>
-            <SelectItem value="30000-999999">Over ₹30,000</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
-      {/* Results */}
-      {filteredDeals.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground text-lg">No deals found matching your criteria</p>
-        </div>
-      ) : (
-        <DealGrid deals={filteredDeals} onSave={handleSave} />
-      )}
+      {/* Career3 layout with filtered data */}
+      <Career3
+        eyebrow="Explore our curated tour packages"
+        heading="Tour Deals"
+        subheading="Find your perfect getaway from our handpicked destinations"
+        departments={departments}
+        jobs={filteredJobs}
+        exploreLabel="Build a custom package"
+        exploreHref="/build-package"
+        emptyMessage="No tours found matching your search. Try a different keyword."
+      />
     </div>
   );
 }
