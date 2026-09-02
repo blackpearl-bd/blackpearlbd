@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import toast from 'react-hot-toast';
+import type { PackageDistrict, PackageTourSpot } from '../types';
 
 export function useAdminStats() {
   const statsQuery = useQuery({
@@ -143,6 +144,82 @@ export function usePackageDestinations() {
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
+  };
+}
+
+export function usePackageDistricts(division?: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['admin-package-districts', division],
+    queryFn: () => api.getAdminPackageDistricts(division),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: { division_value: string; name: string; sort_order?: number; is_active?: boolean }) =>
+      api.createPackageDistrict(data),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-package-districts'] }); toast.success('District added'); },
+    onError: (e: Error) => toast.error(e.message || 'Failed to add district'),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; division_value?: string; sort_order?: number; is_active?: boolean } }) =>
+      api.updatePackageDistrict(id, data),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-package-districts'] }); toast.success('District updated'); },
+    onError: (e: Error) => toast.error(e.message || 'Failed to update district'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.deletePackageDistrict(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-package-districts'] }); queryClient.invalidateQueries({ queryKey: ['admin-package-tour-spots'] }); toast.success('District deleted'); },
+    onError: (e: Error) => toast.error(e.message || 'Failed to delete district'),
+  });
+
+  return {
+    districts: query.data?.districts || [],
+    isLoading: query.isLoading,
+    createDistrict: createMutation.mutate,
+    updateDistrict: updateMutation.mutate,
+    deleteDistrict: deleteMutation.mutate,
+    isCreating: createMutation.isPending,
+  };
+}
+
+export function usePackageTourSpots(districtId?: string) {
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
+    queryKey: ['admin-package-tour-spots', districtId],
+    queryFn: () => api.getAdminPackageTourSpots(districtId),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: { district_id: string; name: string; sort_order?: number; is_active?: boolean }) =>
+      api.createPackageTourSpot(data),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-package-tour-spots'] }); toast.success('Tour spot added'); },
+    onError: (e: Error) => toast.error(e.message || 'Failed to add tour spot'),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; district_id?: string; sort_order?: number; is_active?: boolean } }) =>
+      api.updatePackageTourSpot(id, data),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-package-tour-spots'] }); toast.success('Tour spot updated'); },
+    onError: (e: Error) => toast.error(e.message || 'Failed to update tour spot'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.deletePackageTourSpot(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['admin-package-tour-spots'] }); toast.success('Tour spot deleted'); },
+    onError: (e: Error) => toast.error(e.message || 'Failed to delete tour spot'),
+  });
+
+  return {
+    tourSpots: query.data?.tourSpots || [],
+    isLoading: query.isLoading,
+    createTourSpot: createMutation.mutate,
+    updateTourSpot: updateMutation.mutate,
+    deleteTourSpot: deleteMutation.mutate,
+    isCreating: createMutation.isPending,
   };
 }
 

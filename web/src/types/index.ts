@@ -132,6 +132,25 @@ export interface PackageDestination {
   created_at: string;
 }
 
+export interface PackageDistrict {
+  id: string;
+  division_value: string;
+  name: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface PackageTourSpot {
+  id: string;
+  district_id: string;
+  name: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  district?: { name: string; division_value: string };
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;

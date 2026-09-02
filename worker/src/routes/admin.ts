@@ -414,4 +414,112 @@ admin.delete('/package-destinations/:id', authMiddleware, adminMiddleware, async
   return c.json({ success: true });
 });
 
+// ── Package Districts CRUD ─────────────────────────────────────────
+
+admin.get('/package-districts', async (c) => {
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+  const division = c.req.query('division');
+
+  let query = adminClient.from('package_districts').select('*').order('sort_order');
+  if (division) query = query.eq('division_value', division);
+
+  const { data, error } = await query;
+  if (error) return c.json({ error: 'Failed to fetch districts' }, 500);
+  return c.json({ districts: data || [] });
+});
+
+admin.post('/package-districts', authMiddleware, adminMiddleware, async (c) => {
+  const body = await c.req.json();
+  if (!body.division_value || !body.name) return c.json({ error: 'division_value and name required' }, 400);
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+  const { data, error } = await adminClient.from('package_districts').insert({
+    division_value: body.division_value,
+    name: body.name,
+    sort_order: body.sort_order ?? 0,
+    is_active: body.is_active ?? true,
+  }).select().single();
+  if (error) return c.json({ error: 'Failed to create district' }, 500);
+  return c.json({ district: data }, 201);
+});
+
+admin.patch('/package-districts/:id', authMiddleware, adminMiddleware, async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json();
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+  const updateData: Record<string, unknown> = {};
+  if (body.name !== undefined) updateData.name = body.name;
+  if (body.division_value !== undefined) updateData.division_value = body.division_value;
+  if (body.sort_order !== undefined) updateData.sort_order = body.sort_order;
+  if (body.is_active !== undefined) updateData.is_active = body.is_active;
+  const { data, error } = await adminClient.from('package_districts').update(updateData).eq('id', id).select().single();
+  if (error) return c.json({ error: 'Failed to update district' }, 500);
+  return c.json({ district: data });
+});
+
+admin.delete('/package-districts/:id', authMiddleware, adminMiddleware, async (c) => {
+  const id = c.req.param('id');
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+  const { error } = await adminClient.from('package_districts').delete().eq('id', id);
+  if (error) return c.json({ error: 'Failed to delete district' }, 500);
+  return c.json({ success: true });
+});
+
+// ── Package Tour Spots CRUD ───────────────────────────────────────
+
+admin.get('/package-tour-spots', async (c) => {
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+  const districtId = c.req.query('district_id');
+
+  let query = adminClient.from('package_tour_spots').select('*, district:package_districts(name, division_value)').order('sort_order');
+  if (districtId) query = query.eq('district_id', districtId);
+
+  const { data, error } = await query;
+  if (error) return c.json({ error: 'Failed to fetch tour spots' }, 500);
+  return c.json({ tourSpots: data || [] });
+});
+
+admin.post('/package-tour-spots', authMiddleware, adminMiddleware, async (c) => {
+  const body = await c.req.json();
+  if (!body.district_id || !body.name) return c.json({ error: 'district_id and name required' }, 400);
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+  const { data, error } = await adminClient.from('package_tour_spots').insert({
+    district_id: body.district_id,
+    name: body.name,
+    sort_order: body.sort_order ?? 0,
+    is_active: body.is_active ?? true,
+  }).select('*, district:package_districts(name, division_value)').single();
+  if (error) return c.json({ error: 'Failed to create tour spot' }, 500);
+  return c.json({ tourSpot: data }, 201);
+});
+
+admin.patch('/package-tour-spots/:id', authMiddleware, adminMiddleware, async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json();
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+  const updateData: Record<string, unknown> = {};
+  if (body.name !== undefined) updateData.name = body.name;
+  if (body.district_id !== undefined) updateData.district_id = body.district_id;
+  if (body.sort_order !== undefined) updateData.sort_order = body.sort_order;
+  if (body.is_active !== undefined) updateData.is_active = body.is_active;
+  const { data, error } = await adminClient.from('package_tour_spots').update(updateData).eq('id', id).select('*, district:package_districts(name, division_value)').single();
+  if (error) return c.json({ error: 'Failed to update tour spot' }, 500);
+  return c.json({ tourSpot: data });
+});
+
+admin.delete('/package-tour-spots/:id', authMiddleware, adminMiddleware, async (c) => {
+  const id = c.req.param('id');
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+  const { error } = await adminClient.from('package_tour_spots').delete().eq('id', id);
+  if (error) return c.json({ error: 'Failed to delete tour spot' }, 500);
+  return c.json({ success: true });
+});
+
 export default admin;

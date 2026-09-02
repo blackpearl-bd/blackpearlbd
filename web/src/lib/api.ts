@@ -113,7 +113,31 @@ export const api = {
     fetchApi<{ destination: PackageDestination }>(`/admin/package-destinations/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deletePackageDestination: (id: string) =>
     fetchApi(`/admin/package-destinations/${id}`, { method: 'DELETE' }),
+
+  // Admin Package Districts
+  getAdminPackageDistricts: (division?: string) => {
+    const q = division ? `?division=${encodeURIComponent(division)}` : '';
+    return fetchApi<{ districts: PackageDistrict[] }>(`/admin/package-districts${q}`);
+  },
+  createPackageDistrict: (data: { division_value: string; name: string; sort_order?: number; is_active?: boolean }) =>
+    fetchApi<{ district: PackageDistrict }>('/admin/package-districts', { method: 'POST', body: JSON.stringify(data) }),
+  updatePackageDistrict: (id: string, data: { name?: string; division_value?: string; sort_order?: number; is_active?: boolean }) =>
+    fetchApi<{ district: PackageDistrict }>(`/admin/package-districts/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deletePackageDistrict: (id: string) =>
+    fetchApi(`/admin/package-districts/${id}`, { method: 'DELETE' }),
+
+  // Admin Package Tour Spots
+  getAdminPackageTourSpots: (districtId?: string) => {
+    const q = districtId ? `?district_id=${encodeURIComponent(districtId)}` : '';
+    return fetchApi<{ tourSpots: PackageTourSpot[] }>(`/admin/package-tour-spots${q}`);
+  },
+  createPackageTourSpot: (data: { district_id: string; name: string; sort_order?: number; is_active?: boolean }) =>
+    fetchApi<{ tourSpot: PackageTourSpot }>('/admin/package-tour-spots', { method: 'POST', body: JSON.stringify(data) }),
+  updatePackageTourSpot: (id: string, data: { name?: string; district_id?: string; sort_order?: number; is_active?: boolean }) =>
+    fetchApi<{ tourSpot: PackageTourSpot }>(`/admin/package-tour-spots/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deletePackageTourSpot: (id: string) =>
+    fetchApi(`/admin/package-tour-spots/${id}`, { method: 'DELETE' }),
 };
 
 // Import types at the top level for convenience
-import type { Profile, TourDeal, CustomPackage, Booking, SavedDeal, PearlsHistory, Destination, ProfileStats, AdminStats, PackageDestination } from '../types';
+import type { Profile, TourDeal, CustomPackage, Booking, SavedDeal, PearlsHistory, Destination, ProfileStats, AdminStats, PackageDestination, PackageDistrict, PackageTourSpot } from '../types';

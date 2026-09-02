@@ -1,5 +1,6 @@
 import { CustomPackagesManager } from '@/components/admin/CustomPackagesManager';
 import { DestinationManager } from '@/components/admin/DestinationManager';
+import { BangladeshDataManager } from '@/components/admin/BangladeshDataManager';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { BuildPackageIcon } from '@/components/icons/BuildPackageIcon';
 
@@ -20,6 +21,7 @@ export default function AdminCustomPackages() {
       </div>
       <div className="space-y-6">
         <DestinationManager />
+        <BangladeshDataManager />
         <CustomPackagesManager />
       </div>
     </div>
