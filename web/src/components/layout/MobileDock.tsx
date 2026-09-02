@@ -36,7 +36,7 @@ const idMap: Record<string, string> = {
 export function MobileDock() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, signInWithGoogle } = useAuth()
   const [callOpen, setCallOpen] = useState(false)
 
   const activeId = idMap[pathname] ?? null
@@ -51,7 +51,7 @@ export function MobileDock() {
       return
     }
     if (item.id === 'profile' && !isAuthenticated) {
-      navigate('/profile')
+      signInWithGoogle()
       return
     }
     navigate(item.href)
