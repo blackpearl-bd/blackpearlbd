@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAdminStats } from '@/hooks/useAdmin';
 import { formatDate, formatCurrency, getStatusColor } from '@/lib/utils';
 import { AdminDashboardSkeleton } from '@/components/skeletons/AdminDashboardSkeleton';
+import { LayoutDashboard } from 'lucide-react';
 
 export default function AdminDashboard() {
   const { stats, recentBookings, isLoading } = useAdminStats();
@@ -13,47 +14,59 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-primary mb-6">Dashboard</h1>
-      
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Page Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+          <LayoutDashboard className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Overview of your platform</p>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
       {stats && <AdminStatsCards stats={stats} />}
 
       {/* Recent Bookings */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Recent Bookings</CardTitle>
+      <Card className="mt-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Recent Bookings</CardTitle>
         </CardHeader>
         <CardContent>
           {recentBookings.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No recent bookings</p>
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No recent bookings</p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">User</th>
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Type</th>
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Amount</th>
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Date</th>
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">User</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Type</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Amount</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Date</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentBookings.map((booking) => (
-                    <tr key={booking.id} className="border-b hover:bg-accent">
-                      <td className="py-3 px-4">
-                        <p className="font-medium">{booking.user?.full_name || 'N/A'}</p>
+                    <tr key={booking.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
+                      <td className="py-3 px-3">
+                        <p className="text-sm font-medium text-foreground">{booking.user?.full_name || 'N/A'}</p>
                       </td>
-                      <td className="py-3 px-4">
-                        <Badge variant="outline">
+                      <td className="py-3 px-3">
+                        <Badge variant="outline" className="text-xs">
                           {booking.booking_type === 'deal' ? 'Deal' : 'Custom'}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4">{formatCurrency(booking.total_amount)}</td>
-                      <td className="py-3 px-4 text-muted-foreground">
+                      <td className="py-3 px-3 text-sm text-foreground">{formatCurrency(booking.total_amount)}</td>
+                      <td className="py-3 px-3 text-sm text-muted-foreground">
                         {formatDate(booking.booked_at)}
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3">
                         <Badge className={getStatusColor(booking.status)}>
                           {booking.status}
                         </Badge>

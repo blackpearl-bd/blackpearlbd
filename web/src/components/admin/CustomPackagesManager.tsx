@@ -3,10 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, Package } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { formatDate, formatCurrency, getStatusColor } from '@/lib/utils';
 import { useAdminCustomPackages } from '@/hooks/useAdmin';
 
@@ -39,49 +39,56 @@ export function CustomPackagesManager() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Custom Packages ({total})</CardTitle>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Package className="w-5 h-5 text-muted-foreground" />
+          Custom Packages ({total})
+        </CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          <div className="text-center py-12 text-muted-foreground">Loading...</div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">User</th>
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Destination</th>
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Budget</th>
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Travel Date</th>
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Status</th>
-                    <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Actions</th>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">User</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Destination</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">Budget</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Travel Date</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Status</th>
+                    <th className="text-right py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {customPackages.map((pkg) => (
-                    <tr key={pkg.id} className="border-b hover:bg-accent">
-                      <td className="py-3 px-4">
-                        <div>
-                          <p className="font-medium">{pkg.user?.full_name || 'N/A'}</p>
-                          <p className="text-sm text-muted-foreground">{pkg.user?.email}</p>
+                    <tr key={pkg.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
+                      <td className="py-3 px-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{pkg.user?.full_name || 'N/A'}</p>
+                          <p className="text-xs text-muted-foreground truncate">{pkg.user?.email}</p>
                         </div>
                       </td>
-                      <td className="py-3 px-4">{pkg.title || 'N/A'}</td>
-                      <td className="py-3 px-4">{pkg.budget ? formatCurrency(pkg.budget) : 'N/A'}</td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-3 text-sm text-muted-foreground hidden sm:table-cell">{pkg.title || 'N/A'}</td>
+                      <td className="py-3 px-3 text-sm font-medium text-foreground hidden md:table-cell">
+                        {pkg.budget ? formatCurrency(pkg.budget) : 'N/A'}
+                      </td>
+                      <td className="py-3 px-3 text-sm text-muted-foreground hidden lg:table-cell">
                         {pkg.travel_date ? formatDate(pkg.travel_date) : 'N/A'}
                       </td>
-                      <td className="py-3 px-4">
-                        <Badge className={getStatusColor(pkg.status)}>
+                      <td className="py-3 px-3">
+                        <Badge className={cn('text-xs', getStatusColor(pkg.status))}>
                           {pkg.status}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4">
-                        <Button variant="ghost" size="icon" onClick={() => openDetails(pkg)}>
-                          <Eye className="w-4 h-4" />
-                        </Button>
+                      <td className="py-3 px-3">
+                        <div className="flex justify-end">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDetails(pkg)}>
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -90,29 +97,31 @@ export function CustomPackagesManager() {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between mt-4">
-              <p className="text-sm text-muted-foreground">
-                Page {page} of {totalPages}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                <p className="text-sm text-muted-foreground">
+                  Page {page} of {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </>
         )}
 

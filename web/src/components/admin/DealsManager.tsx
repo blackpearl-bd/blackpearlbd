@@ -5,8 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { Plus, Edit, Trash2, Package } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 import { useDeals } from '@/hooks/useDeals';
 import { api } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
@@ -126,53 +126,57 @@ export function DealsManager() {
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle>Tour Deals ({deals.length})</CardTitle>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Deal
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Package className="w-5 h-5 text-muted-foreground" />
+            Tour Deals ({deals.length})
+          </CardTitle>
+          <Button onClick={() => setIsCreateModalOpen(true)} size="sm">
+            <Plus className="w-4 h-4 mr-1.5" />
+            Add Deal
           </Button>
         </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          <div className="text-center py-12 text-muted-foreground">Loading...</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Title</th>
-                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Destination</th>
-                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Price</th>
-                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Duration</th>
-                  <th className="text-left py-3 px-4 font-semibold text-muted-foreground">Actions</th>
+                <tr className="border-b border-border">
+                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Title</th>
+                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Destination</th>
+                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Price</th>
+                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">Duration</th>
+                  <th className="text-right py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {deals.map((deal) => (
-                  <tr key={deal.id} className="border-b hover:bg-accent">
-                    <td className="py-3 px-4">
-                      <div>
-                        <span className="font-medium">{deal.title}</span>
+                  <tr key={deal.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
+                    <td className="py-3 px-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{deal.title}</p>
+                        <p className="text-xs text-muted-foreground truncate sm:hidden">{deal.destination}</p>
                         {deal.is_featured && (
-                          <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">
+                          <span className="inline-block mt-1 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">
                             Featured
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-muted-foreground">{deal.destination}</td>
-                    <td className="py-3 px-4">{formatCurrency(deal.price)}</td>
-                    <td className="py-3 px-4">{deal.duration_days} days</td>
-                    <td className="py-3 px-4">
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => openEditModal(deal)}>
+                    <td className="py-3 px-3 text-sm text-muted-foreground hidden sm:table-cell">{deal.destination}</td>
+                    <td className="py-3 px-3 text-sm font-medium text-foreground">{formatCurrency(deal.price)}</td>
+                    <td className="py-3 px-3 text-sm text-muted-foreground hidden md:table-cell">{deal.duration_days} days</td>
+                    <td className="py-3 px-3">
+                      <div className="flex gap-1 justify-end">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditModal(deal)}>
                           <Edit className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(deal.id)}>
-                          <Trash2 className="w-4 h-4 text-rose-500" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(deal.id)}>
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
                     </td>
