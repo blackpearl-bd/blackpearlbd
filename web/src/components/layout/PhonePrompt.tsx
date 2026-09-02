@@ -9,24 +9,6 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import toast from 'react-hot-toast';
 
-const DISMISSED_KEY = 'phone-prompt-dismissed';
-
-function wasDismissed(): boolean {
-  try {
-    return localStorage.getItem(DISMISSED_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
-
-function markDismissed() {
-  try {
-    localStorage.setItem(DISMISSED_KEY, '1');
-  } catch {
-    // ignore
-  }
-}
-
 export function PhonePrompt() {
   const { user, profile, isAuthenticated, isLoading } = useAuth();
   const { setProfile } = useAuthStore();
@@ -39,8 +21,6 @@ export function PhonePrompt() {
     if (isLoading || !isAuthenticated || !profile) return;
     // Already has phone → no need
     if (profile.phone && profile.phone.trim()) return;
-    // Was dismissed before → don't show again
-    if (wasDismissed()) return;
     setOpen(true);
   }, [isLoading, isAuthenticated, profile]);
 
@@ -51,7 +31,6 @@ export function PhonePrompt() {
     try {
       const { profile: updated } = await api.updateProfile({ phone: trimmed });
       setProfile(updated);
-      markDismissed();
       setOpen(false);
       toast.success('Phone number saved');
     } catch (err) {
@@ -62,7 +41,6 @@ export function PhonePrompt() {
   };
 
   const handleDismiss = () => {
-    markDismissed();
     setOpen(false);
   };
 
