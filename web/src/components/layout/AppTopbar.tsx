@@ -92,48 +92,14 @@ function useCommandPaletteItems() {
   ]
 
   if (isAdmin) {
-    items.push(
-      {
-        id: 'admin-dashboard',
-        label: 'Admin Dashboard',
-        group: 'Admin',
-        icon: LayoutDashboard as LucideIcon,
-        hint: '/admin',
-        onSelect: () => navigate('/admin'),
-      },
-      {
-        id: 'admin-users',
-        label: 'Manage Users',
-        group: 'Admin',
-        icon: Users as LucideIcon,
-        hint: '/admin/users',
-        onSelect: () => navigate('/admin/users'),
-      },
-      {
-        id: 'admin-deals',
-        label: 'Manage Deals',
-        group: 'Admin',
-        icon: Package as LucideIcon,
-        hint: '/admin/deals',
-        onSelect: () => navigate('/admin/deals'),
-      },
-      {
-        id: 'admin-bookings',
-        label: 'Manage Bookings',
-        group: 'Admin',
-        icon: Calendar as LucideIcon,
-        hint: '/admin/bookings',
-        onSelect: () => navigate('/admin/bookings'),
-      },
-      {
-        id: 'admin-packages',
-        label: 'Custom Packages',
-        group: 'Admin',
-        icon: MapPin as LucideIcon,
-        hint: '/admin/custom-packages',
-        onSelect: () => navigate('/admin/custom-packages'),
-      },
-    )
+    items.push({
+      id: 'admin-dashboard',
+      label: 'Admin Dashboard',
+      group: 'Admin',
+      icon: LayoutDashboard as LucideIcon,
+      hint: '/admin',
+      onSelect: () => navigate('/admin'),
+    })
   }
 
   items.push({
@@ -410,14 +376,6 @@ export function AppTopbar({ className }: { className?: string }) {
                         Settings
                       </Link>
                     </DropdownMenuItem>
-                    {isAdmin && (
-                      <DropdownMenuItem asChild>
-                        <Link to="/admin">
-                          <LayoutDashboard className="size-4" />
-                          Admin Dashboard
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup className="p-1">
