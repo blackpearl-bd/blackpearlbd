@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { AppTopbar } from './AppTopbar'
 import { MobileDock } from './MobileDock'
 import { ScrollToTop } from './ScrollToTop'
+import { PhonePrompt } from './PhonePrompt'
 import { Footer3 } from '@/components/watermelon-ui/footer-3'
 import { footerNavigation } from '@/config/navigation'
 import { Mail, Instagram, Facebook, Twitter } from 'lucide-react'
@@ -15,6 +16,7 @@ export function AppShell({ children }: AppShellProps) {
     <div className="flex h-svh flex-col overflow-hidden no-scrollbar">
       <div className="flex-1 overflow-y-auto">
         <ScrollToTop />
+        <PhonePrompt />
         <AppTopbar />
         <main className="flex flex-1 flex-col pb-16 md:pb-0">
           {children}
