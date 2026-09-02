@@ -50,7 +50,7 @@ export function AdminNav() {
           <ChevronDown className="size-4 text-muted-foreground" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56">
+      <DropdownMenuContent align="end" sideOffset={4} className="w-56">
         {adminPages.map((page) => {
           const PageIcon = page.icon
           const isActive = page.id === currentPage.id
