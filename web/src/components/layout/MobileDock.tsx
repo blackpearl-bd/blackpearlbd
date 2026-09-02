@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Home, Compass, Package, User, Phone } from 'lucide-react'
+import { Home, Compass, User, Phone } from 'lucide-react'
+import { BuildPackageIcon } from '@/components/icons/BuildPackageIcon'
 import { useAuth } from '@/hooks/useAuth'
 import { SlideActionButton } from '@/components/ui/slide-action-button'
 import { Dock, DockItem } from '@/components/ui/dock'
@@ -16,7 +17,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { id: 'home', label: 'Home', icon: Home, href: '/' },
   { id: 'deals', label: 'Deals', icon: Compass, href: '/deals' },
-  { id: 'build', label: 'Build', icon: Package, href: '/build-package' },
+  { id: 'build', label: 'Build', icon: BuildPackageIcon, href: '/build-package' },
   { id: 'profile', label: 'Profile', icon: User, href: '/profile' },
 ]
 

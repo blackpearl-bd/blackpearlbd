@@ -81,6 +81,10 @@ export const api = {
     fetchApi<{ users: Profile[]; total: number; page: number; limit: number; totalPages: number }>(
       `/admin/users?page=${page}&search=${search}`
     ),
+  updateAdminUser: (id: string, data: { full_name?: string; role?: string; status?: string; pearls?: number }) =>
+    fetchApi<{ user: Profile }>(`/admin/users/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteAdminUser: (id: string) =>
+    fetchApi(`/admin/users/${id}`, { method: 'DELETE' }),
   getAdminBookings: (page = 1, status?: string, type?: string) => {
     let url = `/admin/bookings?page=${page}`;
     if (status) url += `&status=${status}`;

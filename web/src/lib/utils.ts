@@ -38,8 +38,7 @@ export function getTierProgress(pearls: number) {
   if (pearls >= 200) return { current: 'Diamond', next: null, progress: 100, needed: 0 };
   if (pearls >= 100) return { current: 'Gold', next: 'Diamond', progress: ((pearls - 100) / 100) * 100, needed: 200 - pearls };
   if (pearls >= 50) return { current: 'Platinum', next: 'Gold', progress: ((pearls - 50) / 50) * 100, needed: 100 - pearls };
-  if (pearls >= 10) return { current: 'Bronze', next: 'Platinum', progress: ((pearls - 10) / 40) * 100, needed: 50 - pearls };
-  return { current: 'New', next: 'Bronze', progress: (pearls / 10) * 100, needed: 10 - pearls };
+  return { current: 'Bronze', next: 'Platinum', progress: Math.min((pearls / 50) * 100, 100), needed: 50 - pearls };
 }
 
 export function getStatusColor(status: string) {

@@ -1,7 +1,8 @@
 'use client'
 
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Home, Compass, Package, User } from 'lucide-react'
+import { Home, Compass, User } from 'lucide-react'
+import { BuildPackageIcon } from '@/components/icons/BuildPackageIcon'
 import {
   Select,
   SelectTrigger,
@@ -20,7 +21,7 @@ interface NavPage {
 const userPages: NavPage[] = [
   { id: 'home', label: 'Home', icon: Home, href: '/' },
   { id: 'deals', label: 'Tour Deals', icon: Compass, href: '/deals' },
-  { id: 'build', label: 'Build Package', icon: Package, href: '/build-package' },
+  { id: 'build', label: 'Build Package', icon: BuildPackageIcon, href: '/build-package' },
   { id: 'profile', label: 'Profile', icon: User, href: '/profile' },
 ]
 
@@ -36,9 +37,8 @@ export function NavigationSelect({ className, hideMobile = false }: { className?
   const { pathname } = useLocation()
   const navigate = useNavigate()
 
-  const currentPage = getCurrentPage(userPages, pathname)
-
-  if (!currentPage) return null
+  // On admin pages, default to Home so the dropdown still renders
+  const currentPage = getCurrentPage(userPages, pathname) ?? userPages[0]
 
   const Icon = currentPage.icon
 

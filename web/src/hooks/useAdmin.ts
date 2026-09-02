@@ -23,11 +23,40 @@ export function useAdminUsers(page = 1, search = '') {
     queryFn: () => api.getAdminUsers(page, search),
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { full_name?: string; role?: string; status?: string; pearls?: number } }) =>
+      api.updateAdminUser(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      toast.success('User updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update user');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.deleteAdminUser(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      toast.success('User deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete user');
+    },
+  });
+
   return {
     users: usersQuery.data?.users || [],
     total: usersQuery.data?.total || 0,
     totalPages: usersQuery.data?.totalPages || 0,
     isLoading: usersQuery.isLoading,
+    updateUser: updateMutation.mutate,
+    deleteUser: deleteMutation.mutate,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
   };
 }
 

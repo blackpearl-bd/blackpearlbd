@@ -1,6 +1,6 @@
 import { CustomPackagesManager } from '@/components/admin/CustomPackagesManager';
 import { AdminNav } from '@/components/admin/AdminNav';
-import { MapPin } from 'lucide-react';
+import { BuildPackageIcon } from '@/components/icons/BuildPackageIcon';
 
 export default function AdminCustomPackages() {
   return (
@@ -8,7 +8,7 @@ export default function AdminCustomPackages() {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <MapPin className="w-5 h-5 text-primary" />
+            <BuildPackageIcon className="w-5 h-5 text-primary" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Custom Packages</h1>

@@ -72,7 +72,7 @@ profile.get('/stats', authMiddleware, async (c) => {
 
   return c.json({
     pearls: profileData?.pearls || 0,
-    status: profileData?.status || 'new',
+    status: profileData?.status || 'bronze',
     totalTours: totalTours || 0,
     pendingBookings: pendingBookings || 0,
   });

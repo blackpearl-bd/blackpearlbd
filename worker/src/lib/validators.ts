@@ -63,3 +63,10 @@ export const UpdateCustomPackageStatusSchema = z.object({
   admin_notes: z.string().optional(),
   estimated_price: z.number().positive().optional(),
 });
+
+export const UpdateAdminUserSchema = z.object({
+  full_name: z.string().min(2).max(100).optional(),
+  role: z.enum(['user', 'admin']).optional(),
+  status: z.enum(['bronze', 'platinum', 'gold', 'diamond']).optional(),
+  pearls: z.number().int().min(0).optional(),
+});

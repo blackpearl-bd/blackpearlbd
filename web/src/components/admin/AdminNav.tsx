@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Package, Calendar, MapPin, ChevronDown } from 'lucide-react'
+import { LayoutDashboard, Users, Package, Calendar, ChevronDown } from 'lucide-react'
+import { BuildPackageIcon } from '@/components/icons/BuildPackageIcon'
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -20,7 +21,7 @@ const adminPages: AdminPage[] = [
   { id: 'admin-users', label: 'Users', icon: Users, href: '/admin/users' },
   { id: 'admin-deals', label: 'Deals', icon: Package, href: '/admin/deals' },
   { id: 'admin-bookings', label: 'Bookings', icon: Calendar, href: '/admin/bookings' },
-  { id: 'admin-packages', label: 'Custom Packages', icon: MapPin, href: '/admin/custom-packages' },
+  { id: 'admin-packages', label: 'Custom Packages', icon: BuildPackageIcon, href: '/admin/custom-packages' },
 ]
 
 function getCurrentAdminPage(pathname: string): AdminPage | undefined {

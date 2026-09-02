@@ -4,15 +4,12 @@ import { cn } from '@/lib/utils'
 import {
   Search,
   User,
-  Settings,
   LogOut,
   Home,
   Compass,
-  Package,
   LayoutDashboard,
   Users,
   Calendar,
-  MapPin,
   HelpCircle,
   Sun,
   Moon,
@@ -23,6 +20,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { BuildPackageIcon } from '@/components/icons/BuildPackageIcon'
 import { useAuth } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import {
@@ -77,7 +75,7 @@ function useCommandPaletteItems() {
       id: 'build-package',
       label: 'Build Package',
       group: 'Navigation',
-      icon: Package as LucideIcon,
+      icon: BuildPackageIcon as LucideIcon,
       hint: '/build-package',
       onSelect: () => navigate('/build-package'),
     },
@@ -370,12 +368,14 @@ export function AppTopbar({ className }: { className?: string }) {
                         Profile
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/profile">
-                        <Settings className="size-4" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin">
+                          <LayoutDashboard className="size-4" />
+                          Admin
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuGroup className="p-1">

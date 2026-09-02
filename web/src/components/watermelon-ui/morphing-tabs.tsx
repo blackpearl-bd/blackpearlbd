@@ -829,7 +829,7 @@ export function MorphingTabs({
                       "group relative z-10 flex h-full w-full min-w-0 items-center gap-2 overflow-hidden rounded-t-2xl px-2 text-left outline-none transition-colors",
                       isActive
                         ? "text-zinc-900 dark:text-white"
-                        : "pb-2 text-white/70 hover:text-white dark:text-zinc-900/70 dark:hover:text-zinc-900",
+                        : "pb-2 text-white hover:text-white dark:text-zinc-900 dark:hover:text-zinc-900",
                       classNames?.tab,
                     )}
                   >

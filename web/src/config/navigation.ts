@@ -6,10 +6,10 @@ import {
   LayoutDashboard,
   Users,
   Calendar,
-  MapPin,
   Settings,
   HelpCircle,
 } from 'lucide-react'
+import { BuildPackageIcon } from '@/components/icons/BuildPackageIcon'
 
 export interface NavigationItem {
   name: string
@@ -27,7 +27,7 @@ export interface NavigationGroup {
 export const userNavigation: NavigationItem[] = [
   { name: 'Home', href: '/', icon: Home },
   { name: 'Tour Deals', href: '/deals', icon: Compass },
-  { name: 'Build Package', href: '/build-package', icon: Package },
+  { name: 'Build Package', href: '/build-package', icon: BuildPackageIcon },
   { name: 'My Profile', href: '/profile', icon: User },
 ]
 
@@ -37,7 +37,7 @@ export const adminNavigation: NavigationItem[] = [
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'Deals', href: '/admin/deals', icon: Package },
   { name: 'Bookings', href: '/admin/bookings', icon: Calendar },
-  { name: 'Packages', href: '/admin/custom-packages', icon: MapPin },
+  { name: 'Packages', href: '/admin/custom-packages', icon: BuildPackageIcon },
 ]
 
 // Footer navigation items

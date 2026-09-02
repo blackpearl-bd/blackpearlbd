@@ -5,7 +5,8 @@ import { DealGrid } from '@/components/deals/DealGrid';
 import { useDeals } from '@/hooks/useDeals';
 import { GlobePolaroids } from '@/components/ui/component';
 import { MorphingTabs } from '@/components/watermelon-ui/morphing-tabs';
-import { Compass, Package, Star, ArrowRight, MapPin, Clock } from 'lucide-react';
+import { Compass, Star, ArrowRight, MapPin, Clock } from 'lucide-react';
+import { BuildPackageIcon } from '@/components/icons/BuildPackageIcon';
 import { formatCurrency } from '@/lib/utils';
 import type { TourDeal } from '@/types';
 
@@ -54,7 +55,7 @@ function FeaturedDealsPreview({ deals }: { deals: TourDeal[] }) {
 function BuildPackagePreview() {
   const steps = [
     { icon: Compass, label: 'Pick a destination', hint: 'Choose from 50+ destinations' },
-    { icon: Package, label: 'Set your budget', hint: 'We tailor packages to your budget' },
+    { icon: BuildPackageIcon, label: 'Set your budget', hint: 'We tailor packages to your budget' },
     { icon: Star, label: 'Customize activities', hint: 'Handpick what you love' },
   ];
 
@@ -127,7 +128,7 @@ export default function Home() {
                   {
                     id: 'packages',
                     label: 'Build Package',
-                    icon: <Package className="w-4 h-4" />,
+                    icon: <BuildPackageIcon className="w-4 h-4" />,
                     content: <BuildPackagePreview />,
                   },
                 ]}
@@ -182,7 +183,7 @@ export default function Home() {
             <Card className="text-center">
               <CardContent className="p-8">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package className="w-8 h-8 text-primary" />
+                  <BuildPackageIcon className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-xl font-semibold text-primary mb-2">Customize Your Trip</h3>
                 <p className="text-muted-foreground">

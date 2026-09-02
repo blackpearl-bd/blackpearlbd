@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Eye, Package } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { BuildPackageIcon } from '@/components/icons/BuildPackageIcon';
 import { cn } from '@/lib/utils';
 import { formatDate, formatCurrency, getStatusColor } from '@/lib/utils';
 import { useAdminCustomPackages } from '@/hooks/useAdmin';
@@ -41,7 +42,7 @@ export function CustomPackagesManager() {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
-          <Package className="w-5 h-5 text-muted-foreground" />
+          <BuildPackageIcon className="w-5 h-5 text-muted-foreground" />
           Custom Packages ({total})
         </CardTitle>
       </CardHeader>

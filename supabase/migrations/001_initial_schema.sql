@@ -12,7 +12,7 @@ create table profiles (
   address text,
   avatar_url text,
   pearls int not null default 0,
-  status text not null default 'new',
+  status text not null default 'bronze',
   role text not null default 'user',
   created_at timestamptz default now(),
   updated_at timestamptz default now()
@@ -167,7 +167,7 @@ begin
       when pearls >= 100 then 'gold'
       when pearls >= 50 then 'platinum'
       when pearls >= 10 then 'bronze'
-      else 'new'
+      else 'bronze'
     end into new_status
     from profiles where id = NEW.user_id;
 

@@ -364,6 +364,7 @@ export default function BuildPackage() {
   // Bangladesh customization state
   const [selectedDivision, setSelectedDivision] = useState<string>('');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('');
+  const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
   const [selectedTourSpots, setSelectedTourSpots] = useState<string[]>([]);
 
   // Reset BD sub-selections when destination changes
@@ -371,17 +372,20 @@ export default function BuildPackage() {
     if (!isBangladeshDestination(destination)) {
       setSelectedDivision('');
       setSelectedDistrict('');
+      setSelectedDistricts([]);
       setSelectedTourSpots([]);
     } else if (destination !== 'bangladesh-customized') {
       // A specific division was selected directly — sync it
       const div = getDivisionForValue(destination);
       setSelectedDivision(div?.name ?? '');
       setSelectedDistrict('');
+      setSelectedDistricts([]);
       setSelectedTourSpots([]);
     } else {
       // 'bangladesh-customized' selected — reset sub-selections
       setSelectedDivision('');
       setSelectedDistrict('');
+      setSelectedDistricts([]);
       setSelectedTourSpots([]);
     }
   }, [destination]);
@@ -396,15 +400,26 @@ export default function BuildPackage() {
     return currentDivision.districts.find((d) => d.name === selectedDistrict);
   }, [currentDivision, selectedDistrict]);
 
+  const isCustomized = destination === 'bangladesh-customized';
+
   const handleDivisionChange = (divisionName: string) => {
     setSelectedDivision(divisionName);
     setSelectedDistrict('');
+    setSelectedDistricts([]);
     setSelectedTourSpots([]);
   };
 
   const handleDistrictChange = (districtName: string) => {
     setSelectedDistrict(districtName);
     setSelectedTourSpots([]);
+  };
+
+  const toggleDistrict = (districtName: string) => {
+    setSelectedDistricts((prev) =>
+      prev.includes(districtName)
+        ? prev.filter((d) => d !== districtName)
+        : [...prev, districtName],
+    );
   };
 
   const toggleTourSpot = (spotName: string) => {
@@ -414,6 +429,14 @@ export default function BuildPackage() {
         : [...prev, spotName],
     );
   };
+
+  // For customized mode: collect all districts and their tour spots from selected districts
+  const customizedTourSpots = useMemo(() => {
+    if (!currentDivision || !isCustomized || selectedDistricts.length === 0) return [];
+    return currentDivision.districts
+      .filter((d) => selectedDistricts.includes(d.name))
+      .map((d) => ({ district: d.name, tourSpots: d.tourSpots }));
+  }, [currentDivision, isCustomized, selectedDistricts]);
 
   const [fromMonth, setFromMonth] = useState(saved?.fromMonth ?? todayInTz.month);
   const [fromDay, setFromDay] = useState(saved?.fromDay ?? todayInTz.day);
@@ -438,18 +461,32 @@ export default function BuildPackage() {
       if (!destination || !fromMonth || !fromDay || !fromYear || !toMonth || !toDay || !toYear) return false;
       // If Bangladesh destination, require district selection
       if (isBangladeshDestination(destination)) {
+        if (isCustomized) {
+          return selectedDistricts.length > 0;
+        }
         return !!selectedDistrict;
       }
     }
     return true;
-  }, [step, destination, fromMonth, fromDay, fromYear, toMonth, toDay, toYear, selectedDistrict]);
+  }, [step, destination, fromMonth, fromDay, fromYear, toMonth, toDay, toYear, selectedDistrict, selectedDistricts, isCustomized]);
+
+  const scrollToTop = () => {
+    const container = document.querySelector('.overflow-y-auto');
+    if (container) container.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleNext = useCallback(() => {
-    if (step < 3 && canNext) setStep(step + 1);
+    if (step < 3 && canNext) {
+      setStep(step + 1);
+      scrollToTop();
+    }
   }, [step, canNext]);
 
   const handleBack = useCallback(() => {
-    if (step > 1) setStep(step - 1);
+    if (step > 1) {
+      setStep(step - 1);
+      scrollToTop();
+    }
   }, [step]);
 
   const handleSubmit = useCallback(
@@ -635,7 +672,42 @@ export default function BuildPackage() {
                         )}
 
                         {/* District select (cascading from division) */}
-                        {currentDivision && (
+                        {currentDivision && isCustomized && (
+                          <div>
+                            <Label className="text-sm font-medium text-foreground">
+                              Districts{' '}
+                              <span className="text-muted-foreground font-normal">
+                                ({selectedDistricts.length} selected)
+                              </span>
+                            </Label>
+                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {currentDivision.districts.map((dist) => (
+                                <label
+                                  key={dist.name}
+                                  className={cn(
+                                    'flex items-center gap-2.5 rounded-lg border px-3 py-2.5 cursor-pointer transition-colors',
+                                    selectedDistricts.includes(dist.name)
+                                      ? 'border-primary bg-primary/5'
+                                      : 'border-border bg-card hover:bg-accent/50',
+                                  )}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedDistricts.includes(dist.name)}
+                                    onChange={() => toggleDistrict(dist.name)}
+                                    className="h-4 w-4 rounded border-border text-primary focus:ring-primary/30"
+                                  />
+                                  <span className="text-sm text-foreground">
+                                    {dist.name}
+                                  </span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* District select — single (for specific division selections) */}
+                        {currentDivision && !isCustomized && (
                           <div>
                             <Label className="text-sm font-medium text-foreground">District</Label>
                             <Select
@@ -656,8 +728,39 @@ export default function BuildPackage() {
                           </div>
                         )}
 
-                        {/* Tour spots checkboxes (cascading from district) */}
-                        {currentDistrict && (
+                        {/* Tour spots — read-only details (customized mode) */}
+                        {isCustomized && customizedTourSpots.length > 0 && (
+                          <div>
+                            <Label className="text-sm font-medium text-foreground">
+                              Tour Spots in Selected Districts
+                            </Label>
+                            <div className="mt-2 space-y-3">
+                              {customizedTourSpots.map((group) => (
+                                <div
+                                  key={group.district}
+                                  className="rounded-lg border border-border bg-card p-3"
+                                >
+                                  <h5 className="text-sm font-semibold text-foreground mb-2">
+                                    {group.district}
+                                  </h5>
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                    {group.tourSpots.map((spot) => (
+                                      <span
+                                        key={spot.name}
+                                        className="inline-block rounded-full bg-primary/10 text-primary text-xs px-2.5 py-1 font-medium"
+                                      >
+                                        {spot.name}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Tour spots checkboxes (cascading from district — specific division mode) */}
+                        {!isCustomized && currentDistrict && (
                           <div>
                             <Label className="text-sm font-medium text-foreground">
                               Tour Spots{' '}
@@ -794,13 +897,50 @@ export default function BuildPackage() {
                           <span className="text-foreground font-medium">{selectedDivision}</span>
                         </div>
                       )}
-                      {isBangladeshDestination(destination) && selectedDistrict && (
+                      {isBangladeshDestination(destination) && !isCustomized && selectedDistrict && (
                         <div className="flex justify-between items-center py-1">
                           <span className="text-muted-foreground">District:</span>
                           <span className="text-foreground font-medium">{selectedDistrict}</span>
                         </div>
                       )}
-                      {isBangladeshDestination(destination) && selectedTourSpots.length > 0 && (
+                      {isBangladeshDestination(destination) && isCustomized && selectedDistricts.length > 0 && (
+                        <div className="py-1">
+                          <span className="text-muted-foreground">Districts:</span>
+                          <div className="flex flex-wrap gap-1.5 mt-1.5">
+                            {selectedDistricts.map((district) => (
+                              <span
+                                key={district}
+                                className="inline-block rounded-full bg-primary/10 text-primary text-xs px-2.5 py-1 font-medium"
+                              >
+                                {district}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {isBangladeshDestination(destination) && isCustomized && customizedTourSpots.length > 0 && (
+                        <div className="py-1">
+                          <span className="text-muted-foreground">Tour Spots:</span>
+                          <div className="mt-1.5 space-y-1.5">
+                            {customizedTourSpots.map((group) => (
+                              <div key={group.district}>
+                                <span className="text-xs font-semibold text-foreground/70">{group.district}</span>
+                                <div className="flex flex-wrap gap-1.5 mt-1">
+                                  {group.tourSpots.map((spot) => (
+                                    <span
+                                      key={spot.name}
+                                      className="inline-block rounded-full bg-primary/10 text-primary text-xs px-2.5 py-1 font-medium"
+                                    >
+                                      {spot.name}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {isBangladeshDestination(destination) && !isCustomized && selectedTourSpots.length > 0 && (
                         <div className="py-1">
                           <span className="text-muted-foreground">Tour Spots:</span>
                           <div className="flex flex-wrap gap-1.5 mt-1.5">
