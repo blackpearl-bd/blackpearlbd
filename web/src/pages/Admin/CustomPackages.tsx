@@ -1,4 +1,5 @@
 import { CustomPackagesManager } from '@/components/admin/CustomPackagesManager';
+import { DestinationManager } from '@/components/admin/DestinationManager';
 import { AdminNav } from '@/components/admin/AdminNav';
 import { BuildPackageIcon } from '@/components/icons/BuildPackageIcon';
 
@@ -12,12 +13,15 @@ export default function AdminCustomPackages() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">Custom Packages</h1>
-            <p className="text-sm text-muted-foreground">Review custom package requests</p>
+            <p className="text-sm text-muted-foreground">Manage package builder destinations and review requests</p>
           </div>
         </div>
         <AdminNav />
       </div>
-      <CustomPackagesManager />
+      <div className="space-y-6">
+        <DestinationManager />
+        <CustomPackagesManager />
+      </div>
     </div>
   );
 }

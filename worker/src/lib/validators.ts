@@ -70,3 +70,19 @@ export const UpdateAdminUserSchema = z.object({
   status: z.enum(['bronze', 'platinum', 'gold', 'diamond']).optional(),
   pearls: z.number().int().min(0).optional(),
 });
+
+export const CreatePackageDestinationSchema = z.object({
+  category: z.string().min(1).max(100),
+  name: z.string().min(1).max(200),
+  value: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/),
+  sort_order: z.number().int().min(0).optional(),
+  is_active: z.boolean().optional(),
+});
+
+export const UpdatePackageDestinationSchema = z.object({
+  category: z.string().min(1).max(100).optional(),
+  name: z.string().min(1).max(200).optional(),
+  value: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/).optional(),
+  sort_order: z.number().int().min(0).optional(),
+  is_active: z.boolean().optional(),
+});

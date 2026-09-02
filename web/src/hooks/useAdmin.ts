@@ -91,6 +91,61 @@ export function useAdminBookings(page = 1, status?: string, type?: string) {
   };
 }
 
+export function usePackageDestinations() {
+  const queryClient = useQueryClient();
+
+  const destinationsQuery = useQuery({
+    queryKey: ['admin-package-destinations'],
+    queryFn: () => api.getAdminPackageDestinations(),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data: { category: string; name: string; value: string; sort_order?: number; is_active?: boolean }) =>
+      api.createPackageDestination(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-package-destinations'] });
+      toast.success('Destination added');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to add destination');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { category?: string; name?: string; value?: string; sort_order?: number; is_active?: boolean } }) =>
+      api.updatePackageDestination(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-package-destinations'] });
+      toast.success('Destination updated');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update destination');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.deletePackageDestination(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-package-destinations'] });
+      toast.success('Destination deleted');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete destination');
+    },
+  });
+
+  return {
+    destinations: destinationsQuery.data?.destinations || [],
+    isLoading: destinationsQuery.isLoading,
+    createDestination: createMutation.mutate,
+    updateDestination: updateMutation.mutate,
+    deleteDestination: deleteMutation.mutate,
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+  };
+}
+
 export function useAdminCustomPackages(page = 1) {
   const queryClient = useQueryClient();
 

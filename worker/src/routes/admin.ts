@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
 import { adminMiddleware } from '../middleware/admin';
-import { UpdateBookingStatusSchema, UpdateCustomPackageStatusSchema, UpdateAdminUserSchema } from '../lib/validators';
+import { UpdateBookingStatusSchema, UpdateCustomPackageStatusSchema, UpdateAdminUserSchema, CreatePackageDestinationSchema, UpdatePackageDestinationSchema } from '../lib/validators';
 import { createSupabaseAdminClient } from '../lib/supabase';
 import { Env } from '../types';
 
@@ -294,6 +294,121 @@ admin.delete('/users/:id', authMiddleware, adminMiddleware, async (c) => {
 
   if (error) {
     return c.json({ error: 'Failed to delete user' }, 500);
+  }
+
+  return c.json({ success: true });
+});
+
+// ── Package Destinations CRUD ─────────────────────────────────────────
+
+// List all package destinations (admin sees all, public sees active only)
+admin.get('/package-destinations', async (c) => {
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+
+  const { data, error } = await adminClient
+    .from('package_destinations')
+    .select('*')
+    .order('category')
+    .order('sort_order');
+
+  if (error) {
+    return c.json({ error: 'Failed to fetch package destinations' }, 500);
+  }
+
+  return c.json({ destinations: data || [] });
+});
+
+// Public endpoint: active destinations grouped by category (for package builder)
+admin.get('/package-destinations/active', async (c) => {
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+
+  const { data, error } = await adminClient
+    .from('package_destinations')
+    .select('*')
+    .eq('is_active', true)
+    .order('category')
+    .order('sort_order');
+
+  if (error) {
+    return c.json({ error: 'Failed to fetch package destinations' }, 500);
+  }
+
+  return c.json({ destinations: data || [] });
+});
+
+// Create a package destination
+admin.post('/package-destinations', authMiddleware, adminMiddleware, async (c) => {
+  const body = await c.req.json();
+  const result = CreatePackageDestinationSchema.safeParse(body);
+
+  if (!result.success) {
+    return c.json({ error: 'Invalid input', details: result.error.issues }, 400);
+  }
+
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+
+  const { data, error } = await adminClient
+    .from('package_destinations')
+    .insert(result.data)
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === '23505') {
+      return c.json({ error: 'A destination with this value already exists' }, 409);
+    }
+    return c.json({ error: 'Failed to create package destination' }, 500);
+  }
+
+  return c.json({ destination: data }, 201);
+});
+
+// Update a package destination
+admin.patch('/package-destinations/:id', authMiddleware, adminMiddleware, async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json();
+  const result = UpdatePackageDestinationSchema.safeParse(body);
+
+  if (!result.success) {
+    return c.json({ error: 'Invalid input', details: result.error.issues }, 400);
+  }
+
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+
+  const { data, error } = await adminClient
+    .from('package_destinations')
+    .update(result.data)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === '23505') {
+      return c.json({ error: 'A destination with this value already exists' }, 409);
+    }
+    return c.json({ error: 'Failed to update package destination' }, 500);
+  }
+
+  return c.json({ destination: data });
+});
+
+// Delete a package destination
+admin.delete('/package-destinations/:id', authMiddleware, adminMiddleware, async (c) => {
+  const id = c.req.param('id');
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+
+  const { error } = await adminClient
+    .from('package_destinations')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    return c.json({ error: 'Failed to delete package destination' }, 500);
   }
 
   return c.json({ success: true });

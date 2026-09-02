@@ -163,4 +163,23 @@ customPackages.post('/:id/book', authMiddleware, async (c) => {
   return c.json({ booking }, 201);
 });
 
+// Get active package destinations (for package builder combobox)
+customPackages.get('/package-destinations', async (c) => {
+  const env = c.env as Env;
+  const admin = createSupabaseAdminClient(env);
+
+  const { data, error } = await admin
+    .from('package_destinations')
+    .select('*')
+    .eq('is_active', true)
+    .order('category')
+    .order('sort_order');
+
+  if (error) {
+    return c.json({ error: 'Failed to fetch package destinations' }, 500);
+  }
+
+  return c.json({ destinations: data || [] });
+});
+
 export default customPackages;

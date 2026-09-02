@@ -75,6 +75,10 @@ export const api = {
   unsaveDeal: (id: string) =>
     fetchApi(`/saved-deals/${id}`, { method: 'DELETE' }),
 
+  // Package Destinations (public)
+  getPackageDestinations: () =>
+    fetchApi<{ destinations: PackageDestination[] }>('/custom-packages/package-destinations'),
+
   // Admin
   getAdminStats: () => fetchApi<{ stats: AdminStats; recentBookings: Booking[] }>('/admin/stats'),
   getAdminUsers: (page = 1, search = '') =>
@@ -99,7 +103,17 @@ export const api = {
     ),
   updateCustomPackageStatus: (id: string, data: { status: string; admin_notes?: string; estimated_price?: number }) =>
     fetchApi<{ customPackage: CustomPackage }>(`/admin/custom-packages/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  // Admin Package Destinations
+  getAdminPackageDestinations: () =>
+    fetchApi<{ destinations: PackageDestination[] }>('/admin/package-destinations'),
+  createPackageDestination: (data: { category: string; name: string; value: string; sort_order?: number; is_active?: boolean }) =>
+    fetchApi<{ destination: PackageDestination }>('/admin/package-destinations', { method: 'POST', body: JSON.stringify(data) }),
+  updatePackageDestination: (id: string, data: { category?: string; name?: string; value?: string; sort_order?: number; is_active?: boolean }) =>
+    fetchApi<{ destination: PackageDestination }>(`/admin/package-destinations/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deletePackageDestination: (id: string) =>
+    fetchApi(`/admin/package-destinations/${id}`, { method: 'DELETE' }),
 };
 
 // Import types at the top level for convenience
-import type { Profile, TourDeal, CustomPackage, Booking, SavedDeal, PearlsHistory, Destination, ProfileStats, AdminStats } from '../types';
+import type { Profile, TourDeal, CustomPackage, Booking, SavedDeal, PearlsHistory, Destination, ProfileStats, AdminStats, PackageDestination } from '../types';

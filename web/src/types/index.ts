@@ -122,6 +122,16 @@ export interface AdminStats {
   pendingApprovals: number;
 }
 
+export interface PackageDestination {
+  id: string;
+  category: string;
+  name: string;
+  value: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+}
+
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;

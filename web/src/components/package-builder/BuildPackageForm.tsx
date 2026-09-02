@@ -11,6 +11,8 @@ import { useGeoLocation, formatDateInTimezone } from '@/hooks/useGeoLocation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { BANGLADESH_DIVISIONS, type Division, type District, type TourSpot } from '@/data/bangladesh-tourist-spots';
+import { api } from '@/lib/api';
+import type { PackageDestination } from '@/types';
 
 // ── SVG Icons ────────────────────────────────────────────────────────
 const ArrowRightIcon = () => (
@@ -31,32 +33,29 @@ const CheckSvg = () => (
   </svg>
 );
 
-// ── Destination data (from CSV: Column A = category/region, Column B = destination under that category) ──
-
+// ── Destination data ──────────────────────────────────────────────
 
 type DestinationItem = {
   value: string;          // slug for combobox selection
-  name: string;           // display name (Column B)
+  name: string;           // display name
 };
 
 type CategoryGroup = {
-  category: string;       // Column A (group header)
+  category: string;       // group header
   items: DestinationItem[];
 };
 
-// Build Bangladesh division items from the data file
-const bangladeshDivisionItems: DestinationItem[] = [
-  { value: 'bangladesh-customized', name: 'Bangladesh (Customized)' },
-  ...BANGLADESH_DIVISIONS.map((d) => ({
-    value: d.name.toLowerCase().replace(/\s+/g, '-'),
-    name: d.name,
-  })),
-];
-
-const DESTINATION_GROUPS: CategoryGroup[] = [
+// Fallback hardcoded destinations (used if API fails)
+const FALLBACK_DESTINATION_GROUPS: CategoryGroup[] = [
   {
     category: 'Bangladesh',
-    items: bangladeshDivisionItems,
+    items: [
+      { value: 'bangladesh-customized', name: 'Bangladesh (Customized)' },
+      ...BANGLADESH_DIVISIONS.map((d) => ({
+        value: d.name.toLowerCase().replace(/\s+/g, '-'),
+        name: d.name,
+      })),
+    ],
   },
   {
     category: 'Asia',
@@ -72,9 +71,7 @@ const DESTINATION_GROUPS: CategoryGroup[] = [
   },
   {
     category: 'Asia / Europe',
-    items: [
-      { value: 'turkey', name: 'Turkey' },
-    ],
+    items: [{ value: 'turkey', name: 'Turkey' }],
   },
   {
     category: 'Europe',
@@ -84,6 +81,16 @@ const DESTINATION_GROUPS: CategoryGroup[] = [
     ],
   },
 ];
+
+/** Convert flat PackageDestination rows into CategoryGroup[] */
+function groupDestinations(rows: PackageDestination[]): CategoryGroup[] {
+  const map = new Map<string, DestinationItem[]>();
+  for (const row of rows) {
+    if (!map.has(row.category)) map.set(row.category, []);
+    map.get(row.category)!.push({ value: row.value, name: row.name });
+  }
+  return Array.from(map.entries()).map(([category, items]) => ({ category, items }));
+}
 
 /** Determine if a destination value is a Bangladesh customization option */
 function isBangladeshDestination(value: string): boolean {
@@ -95,15 +102,6 @@ function getDivisionForValue(value: string): Division | undefined {
   return BANGLADESH_DIVISIONS.find(
     (d) => d.name.toLowerCase().replace(/\s+/g, '-') === value,
   );
-}
-
-/** Find a destination item by its slug value across all groups. */
-function findDestination(value: string): (DestinationItem & { group: string }) | undefined {
-  for (const group of DESTINATION_GROUPS) {
-    const item = group.items.find((i) => i.value === value);
-    if (item) return { ...item, group: group.category };
-  }
-  return undefined;
 }
 
 // ── Date helpers ─────────────────────────────────────────────────────
@@ -361,6 +359,22 @@ export default function BuildPackage() {
   const [destination, setDestination] = useState(saved?.destination ?? '');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Fetch package destinations from API
+  const [destinationGroups, setDestinationGroups] = useState<CategoryGroup[]>(FALLBACK_DESTINATION_GROUPS);
+
+  useEffect(() => {
+    api
+      .getPackageDestinations()
+      .then(({ destinations }) => {
+        if (destinations.length > 0) {
+          setDestinationGroups(groupDestinations(destinations));
+        }
+      })
+      .catch(() => {
+        // Keep fallback data on error
+      });
+  }, []);
+
   // Bangladesh customization state
   const [selectedDivision, setSelectedDivision] = useState<string>('');
   const [selectedDistrict, setSelectedDistrict] = useState<string>('');
@@ -583,7 +597,7 @@ export default function BuildPackage() {
                         <ComboboxInput placeholder="Search destinations..." />
                         <ComboboxList className="max-h-[400px]">
                           <ComboboxEmpty>No destination found.</ComboboxEmpty>
-                          {DESTINATION_GROUPS.map((group, groupIndex) => (
+                          {destinationGroups.map((group, groupIndex) => (
                             <React.Fragment key={group.category}>
                               {groupIndex > 0 ? <ComboboxSeparator /> : null}
                               <ComboboxGroup>
@@ -617,7 +631,7 @@ export default function BuildPackage() {
 
                   {/* ── Destination Preview ── */}
                   {destination && (() => {
-                    const dest = findDestination(destination);
+                    const dest = destinationGroups.flatMap((g) => g.items.map((i) => ({ ...i, group: g.category }))).find((i) => i.value === destination);
                     if (!dest) return null;
                     return (
                       <motion.div
@@ -888,7 +902,7 @@ export default function BuildPackage() {
                         <span className="text-foreground font-medium">
                           {destination === 'bangladesh-customized'
                             ? 'Bangladesh (Customized)'
-                            : findDestination(destination)?.name ?? '—'}
+                            : destinationGroups.flatMap((g) => g.items.map((i) => ({ ...i, group: g.category }))).find((i) => i.value === destination)?.name ?? '—'}
                         </span>
                       </div>
                       {isBangladeshDestination(destination) && selectedDivision && (
@@ -1003,7 +1017,7 @@ export default function BuildPackage() {
         <div className="lg:col-span-1">
           <div className="lg:sticky lg:top-24">
             <PackageSummary
-              destination={findDestination(destination)?.name ?? null}
+              destination={destinationGroups.flatMap((g) => g.items.map((i) => ({ ...i, group: g.category }))).find((i) => i.value === destination)?.name ?? null}
               travelDate={travelDateDisplay}
               numTravelers={1}
               accommodationType=""
