@@ -78,7 +78,7 @@ export type ComboboxInputProps = {
 };
 
 export function ComboboxInput({ placeholder = 'Search...', className }: ComboboxInputProps) {
-  const { search, setSearch, inputRef, setOpen } = useComboboxContext();
+  const { search, setSearch, inputRef, setOpen, open } = useComboboxContext();
 
   return (
     <input
