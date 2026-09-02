@@ -11,6 +11,7 @@ const DealDetailPage = lazy(() => import('@/pages/DealDetail'));
 const BuildPackage = lazy(() => import('@/pages/BuildPackage'));
 const ProfilePage = lazy(() => import('@/pages/Profile'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
+const AuthCallback = lazy(() => import('@/pages/AuthCallback'));
 
 // Admin pages are grouped into a single "admin" chunk via manualChunks,
 // but each is still lazy-loaded so nothing loads until /admin is hit.
@@ -35,6 +36,14 @@ function SuspenseWrapper({ children }: { children: React.ReactNode }) {
 
 // ── Router ───────────────────────────────────────────────────────────
 export const router = createBrowserRouter([
+  {
+    path: '/auth/callback',
+    element: (
+      <SuspenseWrapper>
+        <AuthCallback />
+      </SuspenseWrapper>
+    ),
+  },
   {
     path: '/',
     element: <RootLayout />,
