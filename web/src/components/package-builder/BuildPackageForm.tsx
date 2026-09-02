@@ -542,7 +542,7 @@ export default function BuildPackage() {
                       <ComboboxTrigger>
                         <ComboboxValue placeholder="Select destination" />
                       </ComboboxTrigger>
-                      <ComboboxContent className="w-[380px]">
+                      <ComboboxContent className="w-full max-w-[380px]">
                         <ComboboxInput placeholder="Search destinations..." />
                         <ComboboxList className="max-h-[400px]">
                           <ComboboxEmpty>No destination found.</ComboboxEmpty>

@@ -186,10 +186,8 @@ export function formatDateInTimezone(
       .map((p) => p.value)
       .join('')
       .trim();
-    const tzPart = parts.find((p) => p.type === 'timeZoneName');
-    const tzLabel = tzPart ? ` (${tzPart.value})` : '';
 
-    return `${dateStr}${tzLabel}`;
+    return dateStr;
   } catch {
     // Fallback if timezone formatting fails
     return `${monthName} ${parseInt(day)}, ${year}`;
