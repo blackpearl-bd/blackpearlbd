@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Career3, { type JobListing } from '@/components/watermelon-ui/career-3';
 import { useDeals, useSavedDeals } from '@/hooks/useDeals';
 import { useAuth } from '@/hooks/useAuth';
@@ -17,6 +18,10 @@ export default function Deals() {
   const { isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
 
+  // Deep link support: /deals?destination=Paris pre-selects that destination tab
+  const [searchParams] = useSearchParams();
+  const requestedDestination = searchParams.get('destination')?.trim() || '';
+
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('newest');
 
@@ -25,6 +30,16 @@ export default function Deals() {
     const dests = [...new Set(deals.map((d) => d.destination))];
     return dests.length > 0 ? ['All', ...dests] : ['All'];
   }, [deals]);
+
+  const hasDestinationTab = requestedDestination !== '' && departments.includes(requestedDestination);
+
+  // If the requested destination has no dedicated tab (no deals there yet),
+  // fall back to pre-filling the search box with it.
+  useEffect(() => {
+    if (!isLoading && requestedDestination && !hasDestinationTab) {
+      setSearch(requestedDestination);
+    }
+  }, [isLoading, requestedDestination, hasDestinationTab]);
 
   // Map TourDeal → JobListing for Career3
   const allJobs: JobListing[] = useMemo(() => {
@@ -57,7 +72,8 @@ export default function Deals() {
         (j) =>
           j.title.toLowerCase().includes(q) ||
           j.location.toLowerCase().includes(q) ||
-          j.description.toLowerCase().includes(q)
+          j.description.toLowerCase().includes(q) ||
+          (j.deal?.deal_code && j.deal.deal_code.toLowerCase().includes(q))
       );
     }
 
@@ -102,7 +118,7 @@ export default function Deals() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search by destination or title..."
+            placeholder="Search by destination, title, or deal ID..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -128,6 +144,7 @@ export default function Deals() {
         heading="Tour Deals"
         subheading="Find your perfect getaway from our handpicked destinations"
         departments={departments}
+        defaultDepartment={hasDestinationTab ? requestedDestination : undefined}
         jobs={filteredJobs}
         exploreLabel="Build a custom package"
         exploreHref="/build-package"

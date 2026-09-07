@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDate, formatCurrency, getStatusColor } from '@/lib/utils';
 import { useAdminBookings } from '@/hooks/useAdmin';
@@ -12,7 +12,7 @@ export function BookingsManager() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<string>('');
-  const { bookings, total, totalPages, isLoading, updateStatus, isUpdating } = useAdminBookings(page, statusFilter || undefined, typeFilter || undefined);
+  const { bookings, total, totalPages, isLoading, updateStatus, deleteBooking, isUpdating, isDeleting } = useAdminBookings(page, statusFilter || undefined, typeFilter || undefined);
 
   const handleStatusUpdate = (bookingId: string, newStatus: string) => {
     updateStatus({ id: bookingId, data: { status: newStatus } });
@@ -95,7 +95,7 @@ export function BookingsManager() {
                         </Badge>
                       </td>
                       <td className="py-3 px-3">
-                        <div className="flex justify-end">
+                        <div className="flex justify-end gap-1">
                           <Select
                             value={booking.status}
                             onValueChange={(value) => handleStatusUpdate(booking.id, value)}
@@ -112,6 +112,19 @@ export function BookingsManager() {
                               <SelectItem value="cancelled">Cancelled</SelectItem>
                             </SelectContent>
                           </Select>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive"
+                            disabled={isDeleting}
+                            onClick={() => {
+                              if (confirm('Delete this booking?')) {
+                                deleteBooking(booking.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </td>
                     </tr>

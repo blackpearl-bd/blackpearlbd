@@ -58,9 +58,18 @@ deals.post('/', authMiddleware, adminMiddleware, async (c) => {
   const env = c.env as Env;
   const admin = createSupabaseAdminClient(env);
 
+  // Generate deal_code: #DDMMYY-HHMM
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = String(now.getFullYear()).slice(-2);
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const deal_code = `#${day}${month}${year}-${hours}${minutes}`;
+
   const { data, error } = await admin
     .from('tour_deals')
-    .insert({ ...result.data, created_by: profile.id })
+    .insert({ ...result.data, deal_code, created_by: profile.id })
     .select()
     .single();
 

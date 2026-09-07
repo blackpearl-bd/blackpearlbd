@@ -97,6 +97,8 @@ export const api = {
   },
   updateBookingStatus: (id: string, data: { status: string; admin_notes?: string }) =>
     fetchApi<{ booking: Booking }>(`/admin/bookings/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deleteBooking: (id: string) =>
+    fetchApi(`/admin/bookings/${id}`, { method: 'DELETE' }),
   getAdminCustomPackages: (page = 1) =>
     fetchApi<{ customPackages: CustomPackage[]; total: number; page: number; limit: number; totalPages: number }>(
       `/admin/custom-packages?page=${page}`

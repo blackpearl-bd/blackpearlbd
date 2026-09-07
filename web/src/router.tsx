@@ -10,6 +10,7 @@ const Deals = lazy(() => import('@/pages/Deals'));
 const DealDetailPage = lazy(() => import('@/pages/DealDetail'));
 const BuildPackage = lazy(() => import('@/pages/BuildPackage'));
 const ProfilePage = lazy(() => import('@/pages/Profile'));
+const SearchResults = lazy(() => import('@/pages/SearchResults'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const AuthCallback = lazy(() => import('@/pages/AuthCallback'));
 
@@ -77,6 +78,14 @@ export const router = createBrowserRouter([
         element: (
           <SuspenseWrapper>
             <BuildPackage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: 'search',
+        element: (
+          <SuspenseWrapper>
+            <SearchResults />
           </SuspenseWrapper>
         ),
       },

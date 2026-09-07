@@ -38,6 +38,7 @@ export interface CommandPaletteProps {
   emptyMessage?: string
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  onQueryChange?: (query: string) => void
 }
 
 function fuzzyMatch(needle: string, hay: string) {
@@ -68,6 +69,7 @@ export function CommandPalette({
   emptyMessage = "No results found.",
   open: controlledOpen,
   onOpenChange,
+  onQueryChange,
 }: CommandPaletteProps) {
   const [internalOpen, setInternalOpen] = useState(false)
   const controlled = controlledOpen !== undefined
@@ -258,7 +260,10 @@ export function CommandPalette({
                   <input
                     ref={inputRef}
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => {
+                      setQuery(e.target.value)
+                      onQueryChange?.(e.target.value)
+                    }}
                     placeholder={placeholder}
                     role="combobox"
                     // The field only exists while the palette is open.

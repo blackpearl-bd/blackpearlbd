@@ -18,8 +18,8 @@ const STORAGE_KEY = 'geo-location';
 // ── Module-level geo state ───────────────────────────────────────────
 // Updated by useGeoLocation so formatCurrency (a plain utility, not a
 // hook) can read the geo-detected currency & locale without React context.
-let _geoCurrency = 'USD';
-let _geoLocale = 'en-US';
+let _geoCurrency = 'BDT';
+let _geoLocale = 'en-BD';
 
 /** Return the geo-detected ISO 4217 currency code (default: USD). */
 export function getGeoCurrency(): string { return _geoCurrency; }
@@ -63,9 +63,9 @@ function resolveCountry(code?: string): { currency: string; locale: string; coun
   const c = code?.toUpperCase();
   const mapped = c ? CURRENCY_MAP[c] : undefined;
   return {
-    country: c ?? 'US',
-    currency: mapped?.currency ?? 'USD',
-    locale: mapped?.locale ?? 'en-US',
+    country: c ?? 'BD',
+    currency: mapped?.currency ?? 'BDT',
+    locale: mapped?.locale ?? 'en-BD',
   };
 }
 
@@ -103,10 +103,10 @@ export function useGeoLocation(): GeoData {
         _geoLocale = cached.locale;
       }
       return cached ?? {
-        country: 'US',
+        country: 'BD',
         timezone: 'UTC',
-        currency: 'USD',
-        locale: 'en-US',
+        currency: 'BDT',
+        locale: 'en-BD',
         loaded: false,
       };
     })(),
@@ -138,13 +138,13 @@ export function useGeoLocation(): GeoData {
         if (!cancelled) {
           // Use browser's own timezone detection as a last resort
           const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
-          _geoCurrency = 'USD';
-          _geoLocale = 'en-US';
+          _geoCurrency = 'BDT';
+          _geoLocale = 'en-BD';
           const result: Omit<GeoData, 'loaded'> = {
-            country: 'US',
+            country: 'BD',
             timezone: tz,
-            currency: 'USD',
-            locale: 'en-US',
+            currency: 'BDT',
+            locale: 'en-BD',
           };
           setGeo({ ...result, loaded: true });
         }

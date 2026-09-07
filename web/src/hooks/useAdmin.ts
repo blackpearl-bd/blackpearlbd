@@ -82,13 +82,27 @@ export function useAdminBookings(page = 1, status?: string, type?: string) {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.deleteBooking(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+      toast.success('Booking deleted');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete booking');
+    },
+  });
+
   return {
     bookings: bookingsQuery.data?.bookings || [],
     total: bookingsQuery.data?.total || 0,
     totalPages: bookingsQuery.data?.totalPages || 0,
     isLoading: bookingsQuery.isLoading,
     updateStatus: updateStatusMutation.mutate,
+    deleteBooking: deleteMutation.mutate,
     isUpdating: updateStatusMutation.isPending,
+    isDeleting: deleteMutation.isPending,
   };
 }
 

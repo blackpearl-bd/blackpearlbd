@@ -14,6 +14,7 @@ export interface Profile {
 
 export interface TourDeal {
   id: string;
+  deal_code: string | null;
   title: string;
   slug: string;
   description: string | null;
@@ -43,6 +44,7 @@ export interface ItineraryDay {
 
 export interface CustomPackage {
   id: string;
+  package_code: string | null;
   user_id: string;
   title: string | null;
   destination_id: string | null;

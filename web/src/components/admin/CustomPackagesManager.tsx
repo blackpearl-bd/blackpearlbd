@@ -56,6 +56,7 @@ export function CustomPackagesManager() {
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">User</th>
+                    <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Package ID</th>
                     <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Destination</th>
                     <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">Budget</th>
                     <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Travel Date</th>
@@ -72,6 +73,7 @@ export function CustomPackagesManager() {
                           <p className="text-xs text-muted-foreground truncate">{pkg.user?.email}</p>
                         </div>
                       </td>
+                      <td className="py-3 px-3 text-sm text-muted-foreground font-mono hidden lg:table-cell">{pkg.package_code || '—'}</td>
                       <td className="py-3 px-3 text-sm text-muted-foreground hidden sm:table-cell">{pkg.title || 'N/A'}</td>
                       <td className="py-3 px-3 text-sm font-medium text-foreground hidden md:table-cell">
                         {pkg.budget ? formatCurrency(pkg.budget) : 'N/A'}
@@ -134,6 +136,12 @@ export function CustomPackagesManager() {
             </DialogHeader>
             {selectedPackage && (
               <div className="space-y-4">
+                {selectedPackage.package_code && (
+                  <div className="bg-accent p-3 rounded-lg">
+                    <Label className="text-muted-foreground">Package ID</Label>
+                    <p className="font-mono font-medium text-lg">{selectedPackage.package_code}</p>
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">User</Label>
@@ -171,7 +179,7 @@ export function CustomPackagesManager() {
                   </div>
                 )}
                 <div className="border-t pt-4">
-                  <Label>Estimated Price (₹)</Label>
+                  <Label>Estimated Price (৳)</Label>
                   <Input
                     type="number"
                     value={estimatedPrice}

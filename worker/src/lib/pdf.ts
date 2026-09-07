@@ -11,12 +11,17 @@ export interface InvoiceData {
   customerEmail: string;
   customerPhone: string;
   bookingType: string;
+  dealCode: string | null;
   title: string;
   destination: string;
   travelDate: string;
   numTravelers: number;
   duration: number;
+  description: string | null;
+  inclusions: string[];
+  exclusions: string[];
   basePrice: number;
+  originalPrice: number | null;
   taxes: number;
   discounts: number;
   totalAmount: number;
@@ -78,18 +83,45 @@ export function generateInvoiceHtml(data: InvoiceData): string {
         <h3>Booking Details</h3>
         <table>
           <tr><td><strong>Type</strong></td><td>${data.bookingType === 'deal' ? 'Tour Deal' : 'Custom Package'}</td></tr>
+          <tr><td><strong>Deal ID</strong></td><td>${data.dealCode || 'N/A'}</td></tr>
           <tr><td><strong>Title</strong></td><td>${data.title}</td></tr>
           <tr><td><strong>Destination</strong></td><td>${data.destination}</td></tr>
-          <tr><td><strong>Travel Date</strong></td><td>${data.travelDate}</td></tr>
-          <tr><td><strong>Travelers</strong></td><td>${data.numTravelers}</td></tr>
           <tr><td><strong>Duration</strong></td><td>${data.duration} days</td></tr>
+          <tr><td><strong>Max Travelers</strong></td><td>${data.numTravelers}</td></tr>
         </table>
       </div>
+
+      ${data.description ? `
+      <div class="section">
+        <h3>Tour Description</h3>
+        <p>${data.description}</p>
+      </div>
+      ` : ''}
+
+      ${data.inclusions && data.inclusions.length > 0 ? `
+      <div class="section">
+        <h3>Inclusions</h3>
+        <ul style="list-style: none; padding: 0;">
+          ${data.inclusions.map(item => `<li style="padding: 2px 0;">✓ ${item}</li>`).join('')}
+        </ul>
+      </div>
+      ` : ''}
+
+      ${data.exclusions && data.exclusions.length > 0 ? `
+      <div class="section">
+        <h3>Exclusions</h3>
+        <ul style="list-style: none; padding: 0;">
+          ${data.exclusions.map(item => `<li style="padding: 2px 0;">✗ ${item}</li>`).join('')}
+        </ul>
+      </div>
+      ` : ''}
 
       <div class="section">
         <h3>Price Breakdown</h3>
         <table>
           <tr><td>Base Price</td><td>₹${data.basePrice.toLocaleString()}</td></tr>
+          ${data.originalPrice && data.originalPrice > data.basePrice ? `<tr><td>Original Price</td><td>₹${data.originalPrice.toLocaleString()}</td></tr>` : ''}
+          ${data.originalPrice && data.originalPrice > data.basePrice ? `<tr><td>Discount</td><td>-₹${(data.originalPrice - data.basePrice).toLocaleString()} (${Math.round((1 - data.basePrice / data.originalPrice) * 100)}% off)</td></tr>` : ''}
           ${data.taxes > 0 ? `<tr><td>Taxes</td><td>₹${data.taxes.toLocaleString()}</td></tr>` : ''}
           ${data.discounts > 0 ? `<tr><td>Discounts</td><td>-₹${data.discounts.toLocaleString()}</td></tr>` : ''}
           <tr class="total"><td>Total Amount</td><td>₹${data.totalAmount.toLocaleString()}</td></tr>

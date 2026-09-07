@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Share2, Calendar, Users, MapPin } from 'lucide-react';
+import { Heart, Share2, Calendar, Users, MapPin, Hash } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,6 +56,12 @@ export function DealDetail({ deal }: DealDetailProps) {
             <MapPin className="w-5 h-5 text-secondary" />
             <span className="text-muted-foreground">{deal.destination}</span>
           </div>
+          {deal.deal_code && (
+            <div className="flex items-center gap-2 mb-2">
+              <Hash className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm font-mono text-muted-foreground">{deal.deal_code}</span>
+            </div>
+          )}
           <h1 className="text-3xl font-bold text-primary mb-2">{deal.title}</h1>
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span className="flex items-center">

@@ -6,20 +6,28 @@ export const UpdateProfileSchema = z.object({
   address: z.string().max(500).optional().or(z.literal('')),
 });
 
+// Helper: treat empty strings, 0, null, and undefined as "not provided"
+function optionalClean() {
+  return z.any().transform((v) => {
+    if (v === '' || v === null || v === undefined || v === 0) return undefined;
+    return v;
+  });
+}
+
 export const CreateDealSchema = z.object({
   title: z.string().min(3).max(200),
   slug: z.string().regex(/^[a-z0-9-]+$/),
   description: z.string().min(10),
-  short_description: z.string().max(300).optional(),
+  short_description: optionalClean().pipe(z.string().max(300).optional()),
   destination: z.string().min(2),
-  price: z.number().positive(),
-  original_price: z.number().positive().optional(),
-  duration_days: z.number().int().positive(),
-  max_travelers: z.number().int().positive().optional(),
-  image_url: z.string().url().optional(),
-  gallery: z.array(z.string().url()).optional(),
-  inclusions: z.array(z.string()).optional(),
-  exclusions: z.array(z.string()).optional(),
+  price: z.coerce.number().positive(),
+  original_price: optionalClean().pipe(z.coerce.number().positive().optional()),
+  duration_days: z.coerce.number().int().positive(),
+  max_travelers: optionalClean().pipe(z.coerce.number().int().positive().optional()),
+  image_url: optionalClean().pipe(z.string().url().optional()),
+  gallery: z.array(z.string().url()).optional().default([]).transform(v => v && v.length > 0 ? v : undefined),
+  inclusions: z.array(z.string()).optional().default([]).transform(v => v && v.length > 0 ? v : undefined),
+  exclusions: z.array(z.string()).optional().default([]).transform(v => v && v.length > 0 ? v : undefined),
   itinerary: z.array(z.object({
     day: z.number(),
     title: z.string(),

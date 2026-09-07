@@ -136,6 +136,24 @@ admin.get('/bookings', authMiddleware, adminMiddleware, async (c) => {
   });
 });
 
+// Delete booking
+admin.delete('/bookings/:id', authMiddleware, adminMiddleware, async (c) => {
+  const id = c.req.param('id');
+  const env = c.env as Env;
+  const adminClient = createSupabaseAdminClient(env);
+
+  const { error } = await adminClient
+    .from('bookings')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    return c.json({ error: 'Failed to delete booking' }, 500);
+  }
+
+  return c.json({ success: true });
+});
+
 // Update booking status
 admin.patch('/bookings/:id', authMiddleware, adminMiddleware, async (c) => {
   const id = c.req.param('id');

@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useCallback, useMemo, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import {
   Search,
@@ -16,6 +16,7 @@ import {
   Monitor,
   Phone,
   Bookmark,
+  Package,
   Trash2,
   ExternalLink,
 } from 'lucide-react'
@@ -47,92 +48,146 @@ import { SlideActionButton } from '@/components/ui/slide-action-button'
 import { SwipeableList, type SwipeableListItem } from '@/components/ui/swipeable-list'
 import { useBookmarkStore } from '@/stores/bookmarkStore'
 import { useBookmarkSync } from '@/hooks/useBookmarks';
+import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 
 import { formatCurrency } from '@/lib/utils'
 
 function useCommandPaletteItems() {
   const navigate = useNavigate()
   const { isAdmin, logout } = useAuth()
+  const [searchQuery, setSearchQuery] = useState('')
+  const { results } = useGlobalSearch(searchQuery)
 
-  const items: CommandItem[] = [
-    {
-      id: 'home',
-      label: 'Home',
-      group: 'Navigation',
-      icon: Home as LucideIcon,
-      hint: '/',
-      onSelect: () => navigate('/'),
-    },
-    {
-      id: 'deals',
-      label: 'Tour Deals',
-      group: 'Navigation',
-      icon: Compass as LucideIcon,
-      hint: '/deals',
-      onSelect: () => navigate('/deals'),
-    },
-    {
-      id: 'build-package',
-      label: 'Build Package',
-      group: 'Navigation',
-      icon: BuildPackageIcon as LucideIcon,
-      hint: '/build-package',
-      onSelect: () => navigate('/build-package'),
-    },
-    {
-      id: 'profile',
-      label: 'My Profile',
-      group: 'Navigation',
-      icon: User as LucideIcon,
-      hint: '/profile',
-      onSelect: () => navigate('/profile'),
-    },
-  ]
+  const navigationItems: CommandItem[] = useMemo(() => {
+    const items: CommandItem[] = [
+      {
+        id: 'home',
+        label: 'Home',
+        group: 'Navigation',
+        icon: Home as LucideIcon,
+        hint: '/',
+        onSelect: () => navigate('/'),
+      },
+      {
+        id: 'deals',
+        label: 'Tour Deals',
+        group: 'Navigation',
+        icon: Compass as LucideIcon,
+        hint: '/deals',
+        onSelect: () => navigate('/deals'),
+      },
+      {
+        id: 'build-package',
+        label: 'Build Package',
+        group: 'Navigation',
+        icon: BuildPackageIcon as LucideIcon,
+        hint: '/build-package',
+        onSelect: () => navigate('/build-package'),
+      },
+      {
+        id: 'profile',
+        label: 'My Profile',
+        group: 'Navigation',
+        icon: User as LucideIcon,
+        hint: '/profile',
+        onSelect: () => navigate('/profile'),
+      },
+    ]
 
-  if (isAdmin) {
+    if (isAdmin) {
+      items.push({
+        id: 'admin-dashboard',
+        label: 'Admin Dashboard',
+        group: 'Admin',
+        icon: LayoutDashboard as LucideIcon,
+        hint: '/admin',
+        onSelect: () => navigate('/admin'),
+      })
+    }
+
     items.push({
-      id: 'admin-dashboard',
-      label: 'Admin Dashboard',
-      group: 'Admin',
-      icon: LayoutDashboard as LucideIcon,
-      hint: '/admin',
-      onSelect: () => navigate('/admin'),
+      id: 'help',
+      label: 'Help & Support',
+      group: 'Actions',
+      icon: HelpCircle as LucideIcon,
+      onSelect: () => window.open('https://blackpearl.travel/support', '_blank'),
     })
-  }
 
-  items.push({
-    id: 'help',
-    label: 'Help & Support',
-    group: 'Actions',
-    icon: HelpCircle as LucideIcon,
-    onSelect: () => window.open('https://blackpearl.travel/support', '_blank'),
-  })
+    items.push({
+      id: 'logout',
+      label: 'Log Out',
+      group: 'Actions',
+      icon: LogOut as LucideIcon,
+      onSelect: () => {
+        logout()
+        navigate('/')
+      },
+    })
 
-  items.push({
-    id: 'logout',
-    label: 'Log Out',
-    group: 'Actions',
-    icon: LogOut as LucideIcon,
-    onSelect: () => {
-      logout()
-      navigate('/')
-    },
-  })
+    return items
+  }, [navigate, isAdmin, logout])
 
-  return items
+  const searchItems: CommandItem[] = useMemo(() => {
+    if (!searchQuery.trim()) return []
+
+    return results.slice(0, 10).map((result) => ({
+      id: `search-${result.id}`,
+      label: result.title,
+      group: result.type === 'deal' ? 'Deals' : result.type === 'bookmark' ? 'Bookmarks' : 'Packages',
+      icon: result.type === 'deal' ? Compass : result.type === 'bookmark' ? Bookmark : Package,
+      hint: result.dealCode || undefined,
+      onSelect: () => navigate(result.href),
+    }))
+  }, [searchQuery, results, navigate])
+
+  const allItems = useMemo(() => {
+    if (searchQuery.trim()) {
+      // When searching, show search results, then "view all" link, then navigation
+      const viewAllItem: CommandItem = {
+        id: 'search-view-all',
+        label: `View all results for "${searchQuery}"`,
+        group: 'Search',
+        icon: Search as LucideIcon,
+        onSelect: () => navigate(`/search?q=${encodeURIComponent(searchQuery)}`),
+      }
+      return [...searchItems, viewAllItem, ...navigationItems]
+    }
+    return navigationItems
+  }, [searchQuery, searchItems, navigationItems, navigate])
+
+  return { items: allItems, searchQuery, setSearchQuery }
 }
 
 export function AppTopbar({ className }: { className?: string }) {
   const { user, profile, isAdmin, isAuthenticated, signInWithGoogle, logout } = useAuth()
   const { theme, setTheme } = useTheme()
+  const { pathname } = useLocation()
+  const isHome = pathname === '/'
+  const [scrolled, setScrolled] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [callOpen, setCallOpen] = useState(false)
   const [bookmarkOpen, setBookmarkOpen] = useState(false)
-  const commandItems = useCommandPaletteItems()
+  const { items: commandItems, searchQuery, setSearchQuery } = useCommandPaletteItems()
   const { bookmarks, removeBookmark } = useBookmarkStore()
   const { bookmarkCount } = useBookmarkSync()
 
   const openPalette = useCallback(() => setPaletteOpen(true), [])
+
+  // On the home route the topbar floats over the edge-to-edge hero:
+  // fully transparent at the top of the page, solid once scrolled.
+  useEffect(() => {
+    if (!isHome) {
+      setScrolled(false)
+      return
+    }
+    // The app scrolls in AppShell's nested overflow-y-auto container, not window.
+    const container = document.querySelector('.overflow-y-auto')
+    if (!container) return
+    const onScroll = () => setScrolled((container as HTMLElement).scrollTop > 8)
+    onScroll()
+    container.addEventListener('scroll', onScroll, { passive: true })
+    return () => container.removeEventListener('scroll', onScroll)
+  }, [isHome])
 
   const bookmarkItems: SwipeableListItem[] = bookmarks.map((deal) => ({
     id: deal.id,
@@ -167,10 +222,22 @@ export function AppTopbar({ className }: { className?: string }) {
         items={commandItems}
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
-        placeholder="Search pages, actions…"
+        placeholder="Search deals, packages, bookmarks…"
+        onQueryChange={setSearchQuery}
       />
 
-      <header className={cn("sticky top-0 z-50 flex h-16 shrink-0 items-center justify-between border-b py-4 px-4 md:h-20 md:pr-8 md:pl-6 bg-background", className)}>
+      <header
+        className={cn(
+          "z-50 flex h-16 shrink-0 items-center justify-between border-b py-4 px-4 md:h-20 md:pr-8 md:pl-6 transition-colors duration-300",
+          isHome
+            ? cn(
+                "fixed inset-x-0 top-0",
+                scrolled ? "bg-background" : "border-transparent bg-transparent",
+              )
+            : "sticky top-0 bg-background",
+          className,
+        )}
+      >
         {/* Left: BlackPearl logo */}
         <Link to="/" className="flex shrink-0 items-center gap-2 z-10">
           <img src="/blackpearl.svg" alt="BlackPearl" className="size-9 shrink-0 dark:brightness-0 dark:invert" />
@@ -328,6 +395,30 @@ export function AppTopbar({ className }: { className?: string }) {
                     </svg>
                     Sign in with Google
                   </Button>
+                  <p className="text-xs text-muted-foreground text-center mt-1">Theme</p>
+                  <DropdownMenuGroup className="p-1">
+                    <DropdownMenuItem
+                      onClick={() => setTheme('light')}
+                      className={cn(theme === 'light' && 'bg-accent text-accent-foreground')}
+                    >
+                      <Sun className="size-4" />
+                      Light
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setTheme('dark')}
+                      className={cn(theme === 'dark' && 'bg-accent text-accent-foreground')}
+                    >
+                      <Moon className="size-4" />
+                      Dark
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setTheme('system')}
+                      className={cn(theme === 'system' && 'bg-accent text-accent-foreground')}
+                    >
+                      <Monitor className="size-4" />
+                      System
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
                 </div>
               ) : (
                 /* ── Signed-in state ── */

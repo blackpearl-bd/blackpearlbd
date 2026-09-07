@@ -64,8 +64,14 @@
     @apply border-border;
   }
 
+  html {
+    height: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
+    min-height: 100%;
+    margin: 0;
   }
 }
 

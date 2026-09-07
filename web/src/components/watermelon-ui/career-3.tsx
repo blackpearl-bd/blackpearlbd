@@ -34,6 +34,8 @@ export interface Career3Props {
   exploreLabel?: string;
   exploreHref?: string;
   emptyMessage?: string;
+  /** Department tab to pre-select on mount (e.g. from a ?destination= URL param) */
+  defaultDepartment?: Department;
 }
 
 interface JobCardProps {
@@ -126,8 +128,9 @@ export default function Career3({
   exploreLabel = "View all tours",
   exploreHref = "#",
   emptyMessage = "No tours found in this category right now.",
+  defaultDepartment,
 }: Career3Props) {
-  const [active, setActive] = useState<Department>(departments[0] ?? "");
+  const [active, setActive] = useState<Department>(defaultDepartment ?? departments[0] ?? "");
 
   const filtered = active === "All" ? jobs : jobs.filter((j) => j.department === active);
 

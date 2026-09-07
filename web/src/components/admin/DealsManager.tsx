@@ -48,8 +48,9 @@ export function DealsManager() {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       setIsCreateModalOpen(false);
       resetForm();
-    } catch (error) {
-      toast.error('Failed to create deal');
+    } catch (error: any) {
+      const msg = error?.message || 'Failed to create deal';
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -147,6 +148,7 @@ export function DealsManager() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Title</th>
+                  <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Deal ID</th>
                   <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Destination</th>
                   <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Price</th>
                   <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden md:table-cell">Duration</th>
@@ -167,6 +169,7 @@ export function DealsManager() {
                         )}
                       </div>
                     </td>
+                    <td className="py-3 px-3 text-sm text-muted-foreground font-mono hidden lg:table-cell">{deal.deal_code || '—'}</td>
                     <td className="py-3 px-3 text-sm text-muted-foreground hidden sm:table-cell">{deal.destination}</td>
                     <td className="py-3 px-3 text-sm font-medium text-foreground">{formatCurrency(deal.price)}</td>
                     <td className="py-3 px-3 text-sm text-muted-foreground hidden md:table-cell">{deal.duration_days} days</td>

@@ -1,14 +1,14 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { MapPin, Plus, Pencil, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
+import { MapPin, Plus, Pencil, Trash2, ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePackageDestinations, usePackageDistricts, usePackageTourSpots } from '@/hooks/useAdmin';
-import type { PackageDestination, PackageDistrict, PackageTourSpot } from '@/types';
+import type { PackageDistrict, PackageTourSpot } from '@/types';
 
 // Toggle switch
 function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
@@ -27,13 +27,35 @@ export function BangladeshDataManager() {
   const { destinations } = usePackageDestinations();
   const bangladeshDivisions = destinations.filter((d) => d.category === 'Bangladesh' && d.value !== 'bangladesh-customized');
 
-  // Districts for all divisions (fetched per-division when expanded)
-  const [expandedDivisions, setExpandedDivisions] = useState<Set<string>>(new Set());
-  const [selectedDivision, setSelectedDivision] = useState<string | null>(null);
+  // Fetch ALL districts and ALL tour spots at once
+  const allDistricts = usePackageDistricts();
+  const allTourSpots = usePackageTourSpots();
 
-  // Tour spots state
+  // Build a map: division_value → districts
+  const districtsByDivision = useMemo(() => {
+    const map = new Map<string, PackageDistrict[]>();
+    allDistricts.districts.forEach((d) => {
+      const list = map.get(d.division_value) || [];
+      list.push(d);
+      map.set(d.division_value, list);
+    });
+    return map;
+  }, [allDistricts.districts]);
+
+  // Build a map: district_id → tour spots
+  const spotsByDistrict = useMemo(() => {
+    const map = new Map<string, PackageTourSpot[]>();
+    allTourSpots.tourSpots.forEach((s) => {
+      const list = map.get(s.district_id) || [];
+      list.push(s);
+      map.set(s.district_id, list);
+    });
+    return map;
+  }, [allTourSpots.tourSpots]);
+
+  // Expand/collapse state
+  const [expandedDivisions, setExpandedDivisions] = useState<Set<string>>(new Set());
   const [expandedDistricts, setExpandedDistricts] = useState<Set<string>>(new Set());
-  const [selectedDistrictId, setSelectedDistrictId] = useState<string | null>(null);
 
   // Dialogs
   const [districtDialog, setDistrictDialog] = useState<{ open: boolean; editing?: PackageDistrict; divisionValue: string }>({ open: false, divisionValue: '' });
@@ -43,9 +65,7 @@ export function BangladeshDataManager() {
   // Form state
   const [formName, setFormName] = useState('');
 
-  // Fetch districts for each expanded division
-  const divisionDistricts = usePackageDistricts(selectedDivision ?? undefined);
-  const districtTourSpots = usePackageTourSpots(selectedDistrictId ?? undefined);
+  const isLoading = allDistricts.isLoading || allTourSpots.isLoading;
 
   const toggleDivision = (value: string) => {
     setExpandedDivisions((prev) => {
@@ -54,7 +74,6 @@ export function BangladeshDataManager() {
       else next.add(value);
       return next;
     });
-    setSelectedDivision(value);
   };
 
   const toggleDistrict = (id: string) => {
@@ -64,15 +83,14 @@ export function BangladeshDataManager() {
       else next.add(id);
       return next;
     });
-    setSelectedDistrictId(id);
   };
 
   const handleSaveDistrict = () => {
     if (!formName.trim()) return;
     if (districtDialog.editing) {
-      divisionDistricts.updateDistrict({ id: districtDialog.editing.id, data: { name: formName.trim() } });
+      allDistricts.updateDistrict({ id: districtDialog.editing.id, data: { name: formName.trim() } });
     } else {
-      divisionDistricts.createDistrict({ division_value: districtDialog.divisionValue, name: formName.trim() });
+      allDistricts.createDistrict({ division_value: districtDialog.divisionValue, name: formName.trim() });
     }
     setDistrictDialog({ open: false, divisionValue: '' });
     setFormName('');
@@ -81,9 +99,9 @@ export function BangladeshDataManager() {
   const handleSaveTourSpot = () => {
     if (!formName.trim()) return;
     if (tourSpotDialog.editing) {
-      districtTourSpots.updateTourSpot({ id: tourSpotDialog.editing.id, data: { name: formName.trim() } });
+      allTourSpots.updateTourSpot({ id: tourSpotDialog.editing.id, data: { name: formName.trim() } });
     } else {
-      districtTourSpots.createTourSpot({ district_id: tourSpotDialog.districtId, name: formName.trim() });
+      allTourSpots.createTourSpot({ district_id: tourSpotDialog.districtId, name: formName.trim() });
     }
     setTourSpotDialog({ open: false, districtId: '' });
     setFormName('');
@@ -91,17 +109,12 @@ export function BangladeshDataManager() {
 
   const handleDelete = () => {
     if (deleteDialog.type === 'district') {
-      divisionDistricts.deleteDistrict(deleteDialog.item.id);
+      allDistricts.deleteDistrict(deleteDialog.item.id);
     } else {
-      districtTourSpots.deleteTourSpot(deleteDialog.item.id);
+      allTourSpots.deleteTourSpot(deleteDialog.item.id);
     }
     setDeleteDialog({ open: false, type: 'district', item: null });
   };
-
-  // We need to fetch districts for all expanded divisions
-  // Use the hook with the first expanded division for now
-  // A better approach fetches per-division, but this keeps it simple
-  const allDistrictsQuery = usePackageDistricts();
 
   return (
     <Card>
@@ -112,7 +125,12 @@ export function BangladeshDataManager() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {bangladeshDivisions.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading...
+          </div>
+        ) : bangladeshDivisions.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground text-sm">
             No Bangladesh divisions found. Add divisions in Package Builder Destinations first.
           </div>
@@ -120,11 +138,11 @@ export function BangladeshDataManager() {
           <div className="space-y-2">
             {bangladeshDivisions.map((division) => {
               const isExpanded = expandedDivisions.has(division.value);
-              const divisionDistrictsForDiv = allDistrictsQuery.districts.filter((d) => d.division_value === division.value);
+              const divisionDistricts = districtsByDivision.get(division.value) || [];
 
               return (
                 <div key={division.value} className="rounded-lg border border-border overflow-hidden">
-                  {/* Division header */}
+                  {/* ── Division header ───────────────────────── */}
                   <div className="flex items-center justify-between px-4 py-3 bg-muted/50">
                     <button
                       type="button"
@@ -133,7 +151,7 @@ export function BangladeshDataManager() {
                     >
                       {isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" /> : <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />}
                       <span className="font-medium text-sm text-foreground">{division.name}</span>
-                      <Badge variant="secondary" className="text-xs">{divisionDistrictsForDiv.length} districts</Badge>
+                      <Badge variant="secondary" className="text-xs">{divisionDistricts.length} districts</Badge>
                     </button>
                     <Button
                       size="sm"
@@ -145,37 +163,36 @@ export function BangladeshDataManager() {
                     </Button>
                   </div>
 
-                  {/* Districts */}
+                  {/* ── Districts + Tour Spots ────────────────── */}
                   {isExpanded && (
                     <div className="divide-y divide-border">
-                      {allDistrictsQuery.isLoading ? (
-                        <div className="px-4 py-3 text-sm text-muted-foreground">Loading districts...</div>
-                      ) : divisionDistrictsForDiv.length === 0 ? (
+                      {divisionDistricts.length === 0 ? (
                         <div className="px-4 py-3 text-sm text-muted-foreground">No districts yet</div>
                       ) : (
-                        divisionDistrictsForDiv.map((district) => {
+                        divisionDistricts.map((district) => {
                           const isDistExpanded = expandedDistricts.has(district.id);
-                          const spotsForDistrict = isDistExpanded ? districtTourSpots.tourSpots.filter((s) => s.district_id === district.id) : [];
+                          const spots = spotsByDistrict.get(district.id) || [];
+                          const activeSpots = spots.filter((s) => s.is_active);
 
                           return (
                             <div key={district.id}>
                               {/* District row */}
                               <div className={cn('flex items-center justify-between px-6 py-2.5', !district.is_active && 'opacity-50')}>
-                                <div className="flex items-center gap-2 flex-1">
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
                                   <Toggle
                                     checked={district.is_active}
-                                    onToggle={() => divisionDistricts.updateDistrict({ id: district.id, data: { is_active: !district.is_active } })}
+                                    onToggle={() => allDistricts.updateDistrict({ id: district.id, data: { is_active: !district.is_active } })}
                                   />
                                   <button
                                     type="button"
-                                    onClick={() => { toggleDistrict(district.id); }}
+                                    onClick={() => toggleDistrict(district.id)}
                                     className="flex items-center gap-1.5 text-left"
                                   >
                                     {isDistExpanded ? <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
-                                    <span className="text-sm font-medium text-foreground">{district.name}</span>
+                                    <span className="text-sm font-medium text-foreground truncate">{district.name}</span>
                                   </button>
-                                  <Badge variant="outline" className="text-xs">
-                                    {isDistExpanded ? spotsForDistrict.length : '...'} spots
+                                  <Badge variant="outline" className="text-xs shrink-0">
+                                    {activeSpots.length}/{spots.length} spots
                                   </Badge>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0">
@@ -196,20 +213,18 @@ export function BangladeshDataManager() {
                                 </div>
                               </div>
 
-                              {/* Tour spots */}
+                              {/* Tour spots (always rendered inline, no extra fetch) */}
                               {isDistExpanded && (
                                 <div className="bg-muted/30">
-                                  {districtTourSpots.isLoading ? (
-                                    <div className="px-10 py-2 text-xs text-muted-foreground">Loading tour spots...</div>
-                                  ) : spotsForDistrict.length === 0 ? (
+                                  {spots.length === 0 ? (
                                     <div className="px-10 py-2 text-xs text-muted-foreground">No tour spots</div>
                                   ) : (
-                                    spotsForDistrict.map((spot) => (
+                                    spots.map((spot) => (
                                       <div key={spot.id} className={cn('flex items-center justify-between px-10 py-2', !spot.is_active && 'opacity-50')}>
                                         <div className="flex items-center gap-2">
                                           <Toggle
                                             checked={spot.is_active}
-                                            onToggle={() => districtTourSpots.updateTourSpot({ id: spot.id, data: { is_active: !spot.is_active } })}
+                                            onToggle={() => allTourSpots.updateTourSpot({ id: spot.id, data: { is_active: !spot.is_active } })}
                                           />
                                           <span className="text-sm text-foreground">{spot.name}</span>
                                         </div>

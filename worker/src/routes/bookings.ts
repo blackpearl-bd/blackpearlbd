@@ -28,7 +28,48 @@ bookings.post('/', authMiddleware, async (c) => {
   const admin = createSupabaseAdminClient(env);
 
   // Generate invoice number
-  const invoiceNumber = `BKP-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+  let invoiceNumber = '';
+
+  if (result.data.booking_type === 'deal' && result.data.deal_id) {
+    // Deal bookings: {deal_code}-D{serial}
+    const { data: deal } = await admin
+      .from('tour_deals')
+      .select('deal_code')
+      .eq('id', result.data.deal_id)
+      .single();
+
+    const dealCode = deal?.deal_code;
+    if (dealCode) {
+      // Find highest serial for this deal_code
+      const { data: existing } = await admin
+        .from('bookings')
+        .select('invoice_number')
+        .like('invoice_number', `${dealCode}-D%`)
+        .order('invoice_number', { ascending: false });
+
+      let serial = 1;
+      if (existing && existing.length > 0) {
+        const last = existing[0].invoice_number;
+        if (last) {
+          const match = last.match(/-D(\d+)$/);
+          if (match) serial = parseInt(match[1], 10) + 1;
+        }
+      }
+      invoiceNumber = `${dealCode}-D${serial}`;
+    } else {
+      invoiceNumber = `BKP-${Date.now()}`;
+    }
+  } else if (result.data.booking_type === 'custom' && result.data.custom_package_id) {
+    // Custom bookings: use the package_code directly
+    const { data: pkg } = await admin
+      .from('custom_packages')
+      .select('package_code')
+      .eq('id', result.data.custom_package_id)
+      .single();
+    invoiceNumber = pkg?.package_code || `BKP-${Date.now()}`;
+  } else {
+    invoiceNumber = `BKP-${Date.now()}`;
+  }
 
   const { data, error } = await admin
     .from('bookings')
@@ -41,7 +82,7 @@ bookings.post('/', authMiddleware, async (c) => {
       traveler_details: result.data.traveler_details,
       invoice_number: invoiceNumber,
     })
-    .select()
+    .select('*, deal:tour_deals(*), custom_package:custom_packages(*)')
     .single();
 
   if (error) {

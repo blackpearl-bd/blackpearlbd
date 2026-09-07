@@ -57,12 +57,42 @@ customPackages.post('/', authMiddleware, async (c) => {
   // Generate title if not provided
   const title = result.data.title || `Custom Package - ${new Date().toLocaleDateString()}`;
 
+  // Generate package_code: #DDMMYY-HHMM-C{serial}
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = String(now.getFullYear()).slice(-2);
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const timestampPrefix = `#${day}${month}${year}-${hours}${minutes}`;
+
+  // Find existing packages with the same timestamp prefix to determine serial
+  const { data: existingPackages } = await admin
+    .from('custom_packages')
+    .select('package_code')
+    .like('package_code', `${timestampPrefix}-C%`)
+    .order('package_code', { ascending: false });
+
+  let serial = 1;
+  if (existingPackages && existingPackages.length > 0) {
+    // Extract the highest serial number from existing codes
+    const lastCode = existingPackages[0].package_code;
+    if (lastCode) {
+      const match = lastCode.match(/-C(\d+)$/);
+      if (match) {
+        serial = parseInt(match[1], 10) + 1;
+      }
+    }
+  }
+  const package_code = `${timestampPrefix}-C${serial}`;
+
   const { data, error } = await admin
     .from('custom_packages')
     .insert({
+      ...result.data,
       user_id: userId,
       title,
-      ...result.data,
+      package_code,
     })
     .select()
     .single();
@@ -138,8 +168,8 @@ customPackages.post('/:id/book', authMiddleware, async (c) => {
     return c.json({ error: 'Cannot book a rejected package' }, 400);
   }
 
-  // Generate invoice number
-  const invoiceNumber = `BKP-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+  // Invoice number = the package_code directly
+  const invoiceNumber = pkg.package_code || `BKP-${Date.now()}`;
 
   // Create booking
   const { data: booking, error: bookingError } = await admin
