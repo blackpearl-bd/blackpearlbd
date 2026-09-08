@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /deals
+Allow: /deals/
+Allow: /build-package
+Allow: /search
+Disallow: /admin
+Disallow: /admin/
+Disallow: /profile
+Disallow: /auth/
+Disallow: /api/
+
+Sitemap: https://blackpearl.bd/sitemap.xml

@@ -1,11 +1,26 @@
 import { useParams } from 'react-router-dom';
+import { useEffect } from 'react';
 import { DealDetail as DealDetailComponent } from '@/components/deals/DealDetail';
 import { useDeal } from '@/hooks/useDeals';
 import { Loader2 } from 'lucide-react';
+import { applyDealMeta } from '@/components/layout/PageTitle';
 
 export default function DealDetailPage() {
   const { slug } = useParams<{ slug: string }>();
   const { deal, isLoading } = useDeal(slug || '');
+
+  useEffect(() => {
+    if (deal) {
+      applyDealMeta({
+        title: deal.title,
+        destination: deal.destination,
+        short_description: deal.short_description,
+        description: deal.description,
+        image_url: deal.image_url,
+        slug: deal.slug,
+      });
+    }
+  }, [deal]);
 
   if (isLoading) {
     return (
