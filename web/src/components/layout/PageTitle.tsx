@@ -149,14 +149,14 @@ export function applyRouteMeta(meta: (typeof PAGE_META)[keyof typeof PAGE_META] 
   if (ogImage) ogImage.remove();
   const ogImageEl = document.createElement('meta') as HTMLMetaElement;
   ogImageEl.setAttribute('property', 'og:image');
-  (ogImageEl as HTMLMetaElement).content = `${SITE_URL}/blackpearl.svg`;
+  (ogImageEl as HTMLMetaElement).content = `${SITE_URL}/logo.svg`;
   head.appendChild(ogImageEl);
 
   const twImage = head.querySelector('meta[name="twitter:image"]');
   if (twImage) twImage.remove();
   const twImageEl = document.createElement('meta');
   twImageEl.name = 'twitter:image';
-  twImageEl.content = `${SITE_URL}/blackpearl.svg`;
+  twImageEl.content = `${SITE_URL}/logo.svg`;
   head.appendChild(twImageEl);
 
   // Charset + viewport are set in index.html and left alone

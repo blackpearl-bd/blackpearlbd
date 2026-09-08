@@ -240,7 +240,7 @@ export function AppTopbar({ className }: { className?: string }) {
       >
         {/* Left: BlackPearl logo */}
         <Link to="/" className="flex shrink-0 items-center gap-2 z-10">
-          <img src="/blackpearl.svg" alt="BlackPearl" className="size-9 shrink-0 dark:brightness-0 dark:invert" />
+          <img src="/logo.svg" alt="BlackPearl" className="size-9 shrink-0 object-contain color-[hsl(var(--primary))]" />
           <span className="text-2xl font-semibold tracking-tight">
             BlackPearl
           </span>

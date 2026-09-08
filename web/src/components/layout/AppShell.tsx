@@ -25,7 +25,7 @@ export function AppShell({ children }: AppShellProps) {
         <Footer3
           brandName="BlackPearl"
           description="Your premier tours and travel agency. Discover amazing destinations, create custom packages, and embark on unforgettable journeys."
-          logo={<img src="/blackpearl.svg" alt="BlackPearl" className="w-8 h-8 dark:brightness-0 dark:invert" />}
+          logo={<img src="/logo.svg" alt="BlackPearl" className="h-8 w-8 object-contain color-[hsl(var(--primary))]" />}
           linkGroups={[
             {
               title: 'Quick Links',
