@@ -15,6 +15,9 @@ import { PackageBuilderSchema, type PackageBuilderValues } from '@/lib/validator
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DatePicker } from '@/components/base/date-picker/date-picker';
+import { getLocalTimeZone, today, parseDate } from '@internationalized/date';
+import type { DateValue } from 'react-aria-components';
 
 export function PackageBuilderForm() {
   const navigate = useNavigate();
@@ -104,10 +107,13 @@ export function PackageBuilderForm() {
                   <FormItem>
                     <FormLabel>Travel Date</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        type="date"
-                        min={new Date().toISOString().split('T')[0]}
+                      <DatePicker
+                        aria-label="Travel date"
+                        value={field.value ? parseDate(field.value) : null}
+                        minValue={today(getLocalTimeZone())}
+                        onChange={(date: DateValue | null) =>
+                          field.onChange(date ? date.toString() : '')
+                        }
                       />
                     </FormControl>
                     <FormMessage />

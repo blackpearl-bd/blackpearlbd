@@ -135,7 +135,7 @@ export default function Career3({
   const filtered = active === "All" ? jobs : jobs.filter((j) => j.department === active);
 
   return (
-    <section className="mx-auto w-full h-full max-w-5xl px-0 py-16 sm:py-20">
+    <section className="mx-auto h-full w-full max-w-7xl px-0 py-16 sm:py-20">
       <div className="flex flex-col items-center text-center">
         <Badge
           variant="outline"
@@ -155,21 +155,23 @@ export default function Career3({
         )}
       </div>
 
-      <div className="mt-10 flex justify-center">
-        <div className="inline-flex items-center gap-1 rounded-full border border-border bg-muted p-1">
-          {departments.map((dept) => (
-            <button
-              key={dept}
-              onClick={() => setActive(dept)}
-              className={`rounded-full px-5 py-2 text-sm font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
-                active === dept
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {dept}
-            </button>
-          ))}
+      <div className="mt-10 flex w-full justify-center">
+        <div className="no-scrollbar w-full max-w-6xl overflow-x-auto rounded-full border border-border bg-muted p-1">
+          <div className="flex min-w-max items-center justify-center gap-1 md:min-w-full">
+            {departments.map((dept) => (
+              <button
+                key={dept}
+                onClick={() => setActive(dept)}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none sm:px-5 ${
+                  active === dept
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {dept}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

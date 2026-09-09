@@ -31,11 +31,11 @@ export function Footer3({
   legalLinks = [],
 }: Footer3Props) {
   return (
-    <footer className="w-full px-4 py-12 md:px-6">
-      <div className="border-border bg-muted mx-auto max-w-7xl overflow-hidden rounded-lg border">
+    <footer className="w-full px-1 py-12 md:px-2">
+      <div className="border-border bg-muted mx-auto w-full overflow-hidden rounded-lg border">
         <div className="p-1">
           <div className="bg-card rounded-lg shadow-sm">
-            <div className="px-8 py-12 md:px-12 md:py-16">
+            <div className="px-4 py-12 md:px-6 md:py-16">
               <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-8">
                 <div className="flex flex-col items-start lg:col-span-4">
                   <div className="mb-6 flex items-center gap-3">
@@ -101,7 +101,7 @@ export function Footer3({
           </div>
         </div>
 
-        <div className="bg-muted/50 px-8 py-6 md:px-12">
+        <div className="bg-muted/50 px-4 py-6 md:px-6">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             {copyright && (
               <p className="text-muted-foreground text-sm">{copyright}</p>

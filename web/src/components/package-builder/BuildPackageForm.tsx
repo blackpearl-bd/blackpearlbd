@@ -1,10 +1,12 @@
+import { useNavigate } from 'react-router-dom';
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CalendarDays, MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Combobox, ComboboxTrigger, ComboboxValue, ComboboxContent, ComboboxInput, ComboboxList, ComboboxItem, ComboboxEmpty, ComboboxGroup, ComboboxSeparator } from '@/components/ui/combobox';
-import { WheelPicker } from '@/components/ui/wheel-picker';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DateRangePicker } from '@/components/base/date-picker/date-range-picker';
+import { parseDate } from '@internationalized/date';
+import type { DateValue } from 'react-aria-components';
 import { Button } from '@/components/ui/button';
 import { PackageSummary } from './PackageSummary';
 import { useGeoLocation, formatDateInTimezone } from '@/hooks/useGeoLocation';
@@ -104,7 +106,8 @@ function getDivisionForValue(value: string): Division | undefined {
   );
 }
 
-// ── Date helpers ─────────────────────────────────────────────────────
+// ── Date helpers ───────────────────────────────────────────────────
+type DateRangeValue = { start: DateValue; end: DateValue } | null;
 const MONTHS = [
   { label: 'January', value: '01' },
   { label: 'February', value: '02' },
@@ -120,154 +123,12 @@ const MONTHS = [
   { label: 'December', value: '12' },
 ];
 
-function getDaysInMonth(year: number, month: number) {
-  return new Date(year, month, 0).getDate();
-}
-
-function generateDayOptions(year: number, month: number) {
-  const days = getDaysInMonth(year, month);
-  return Array.from({ length: days }, (_, i) => ({
-    label: String(i + 1),
-    value: String(i + 1).padStart(2, '0'),
-  }));
-}
-
-function generateYearOptions() {
-  const currentYear = new Date().getFullYear();
-  return Array.from({ length: 8 }, (_, i) => ({
-    label: String(currentYear + i),
-    value: String(currentYear + i),
-  }));
-}
-
 function formatDateDisplay(month: string, day: string, year: string) {
   const m = MONTHS.find((mo) => mo.value === month);
   return `${m?.label ?? month} ${parseInt(day)}, ${year}`;
 }
 
 // ── DatePicker button + popover ──────────────────────────────────────
-function DatePickerPopover({
-  label,
-  month,
-  day,
-  year,
-  onMonthChange,
-  onDayChange,
-  onYearChange,
-  minYear,
-  timezone,
-}: {
-  label: string;
-  month: string;
-  day: string;
-  year: string;
-  onMonthChange: (v: string) => void;
-  onDayChange: (v: string) => void;
-  onYearChange: (v: string) => void;
-  minYear?: number;
-  timezone?: string;
-}) {
-  // Compute GMT label, e.g. "GMT+6"
-  const tzLabel = useMemo(() => {
-    if (!timezone) return null;
-    try {
-      const parts = new Intl.DateTimeFormat(undefined, {
-        timeZone: timezone,
-        timeZoneName: 'shortOffset',
-      })
-        .formatToParts(new Date())
-        .filter((p) => p.type === 'timeZoneName');
-      return parts[0]?.value ?? null;
-    } catch {
-      return null;
-    }
-  }, [timezone]);
-  const yearOptions = useMemo(() => {
-    const all = generateYearOptions();
-    return minYear ? all.filter((o) => Number(o.value) >= minYear) : all;
-  }, [minYear]);
-
-  const dayOptions = useMemo(
-    () => generateDayOptions(Number(year), Number(month)),
-    [year, month],
-  );
-
-  // Clamp day if it exceeds the new month's max
-  const currentDay = useMemo(() => {
-    const maxDay = getDaysInMonth(Number(year), Number(month));
-    const d = Number(day);
-    return d > maxDay ? String(maxDay).padStart(2, '0') : day;
-  }, [year, month, day]);
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            'flex h-10 w-full items-center gap-2 overflow-hidden rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground transition-colors hover:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-foreground/20',
-          )}
-        >
-          <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
-          <span className="truncate">
-            {month && day && year
-              ? formatDateDisplay(month, currentDay, year)
-              : label}
-          </span>
-          {tzLabel && (
-            <span className="ml-auto shrink-0 text-xs text-muted-foreground font-medium">
-              {tzLabel}
-            </span>
-          )}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="start" sideOffset={4} className="w-auto p-3">
-        <div className="flex gap-2">
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs font-medium text-muted-foreground">Month</span>
-            <WheelPicker
-              options={MONTHS}
-              value={month}
-              onValueChange={onMonthChange}
-              visibleCount={5}
-              itemHeight={36}
-              sound
-              className="h-[180px] w-[120px]"
-              aria-label="Select month"
-            />
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs font-medium text-muted-foreground">Day</span>
-            <WheelPicker
-              options={dayOptions}
-              value={currentDay}
-              onValueChange={onDayChange}
-              visibleCount={5}
-              itemHeight={36}
-              sound
-              className="h-[180px] w-[80px]"
-              aria-label="Select day"
-            />
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs font-medium text-muted-foreground">Year</span>
-            <WheelPicker
-              options={yearOptions}
-              value={year}
-              onValueChange={onYearChange}
-              visibleCount={5}
-              itemHeight={36}
-              sound
-              className="h-[180px] w-[100px]"
-              aria-label="Select year"
-            />
-          </div>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 // ── Step labels ──────────────────────────────────────────────────────
 const STEP_LABELS = [
   { title: 'Destination & Dates', description: 'Where and when do you want to travel?' },
@@ -287,6 +148,10 @@ type SavedState = {
   toMonth: string;
   toDay: string;
   toYear: string;
+  selectedDivision?: string;
+  selectedDistrict?: string;
+  selectedDistricts?: string[];
+  selectedTourSpots?: string[];
 };
 
 function loadSavedState(): SavedState | null {
@@ -299,10 +164,17 @@ function loadSavedState(): SavedState | null {
   }
 }
 
+interface BuildPackageFormProps {
+  /** Render only step one inside the Home page quick-access tab. */
+  embedded?: boolean;
+}
+
 // ── Main Component ───────────────────────────────────────────────────
-export default function BuildPackage() {
+export default function BuildPackage({ embedded = false }: BuildPackageFormProps) {
+  const navigate = useNavigate();
   const saved = useMemo(() => loadSavedState(), []);
   const geo = useGeoLocation();
+  const pad = (n: number) => String(n).padStart(2, '0');
 
   // Date defaults – today / tomorrow, resolved in the visitor's timezone
   const today = useMemo(() => new Date(), []);
@@ -353,9 +225,7 @@ export default function BuildPackage() {
     }
   }, [geo.timezone, tomorrow]);
 
-  const pad = (n: number) => String(n).padStart(2, '0');
-
-  const [step, setStep] = useState(saved?.step ?? 1);
+  const [step, setStep] = useState(embedded ? 1 : (saved?.step ?? 1));
   const [destination, setDestination] = useState(saved?.destination ?? '');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -376,10 +246,10 @@ export default function BuildPackage() {
   }, []);
 
   // Bangladesh customization state
-  const [selectedDivision, setSelectedDivision] = useState<string>('');
-  const [selectedDistrict, setSelectedDistrict] = useState<string>('');
-  const [selectedDistricts, setSelectedDistricts] = useState<string[]>([]);
-  const [selectedTourSpots, setSelectedTourSpots] = useState<string[]>([]);
+  const [selectedDivision, setSelectedDivision] = useState<string>(saved?.selectedDivision ?? '');
+  const [selectedDistrict, setSelectedDistrict] = useState<string>(saved?.selectedDistrict ?? '');
+  const [selectedDistricts, setSelectedDistricts] = useState<string[]>(saved?.selectedDistricts ?? []);
+  const [selectedTourSpots, setSelectedTourSpots] = useState<string[]>(saved?.selectedTourSpots ?? []);
 
   // Reset BD sub-selections when destination changes
   useEffect(() => {
@@ -452,23 +322,57 @@ export default function BuildPackage() {
       .map((d) => ({ district: d.name, tourSpots: d.tourSpots }));
   }, [currentDivision, isCustomized, selectedDistricts]);
 
-  const [fromMonth, setFromMonth] = useState(saved?.fromMonth ?? todayInTz.month);
-  const [fromDay, setFromDay] = useState(saved?.fromDay ?? todayInTz.day);
-  const [fromYear, setFromYear] = useState(saved?.fromYear ?? todayInTz.year);
+  const [dateRange, setDateRange] = useState<DateRangeValue>(() => {
+    if (saved?.fromYear && saved?.fromMonth && saved?.fromDay && saved?.toYear && saved?.toMonth && saved?.toDay) {
+      try {
+        return {
+          start: parseDate(`${saved.fromYear}-${saved.fromMonth}-${saved.fromDay}`),
+          end: parseDate(`${saved.toYear}-${saved.toMonth}-${saved.toDay}`),
+        };
+      } catch {
+        // fall through to defaults
+      }
+    }
+    return {
+      start: parseDate(`${todayInTz.year}-${todayInTz.month}-${todayInTz.day}`),
+      end: parseDate(`${tomorrowInTz.year}-${tomorrowInTz.month}-${tomorrowInTz.day}`),
+    };
+  });
 
-  const [toMonth, setToMonth] = useState(saved?.toMonth ?? tomorrowInTz.month);
-  const [toDay, setToDay] = useState(saved?.toDay ?? tomorrowInTz.day);
-  const [toYear, setToYear] = useState(saved?.toYear ?? tomorrowInTz.year);
+  // Derived display parts (summary sidebar, review, sessionStorage)
+  const fromMonth = dateRange ? pad(dateRange.start.month) : '';
+  const fromDay = dateRange ? pad(dateRange.start.day) : '';
+  const fromYear = dateRange ? String(dateRange.start.year) : '';
+  const toMonth = dateRange ? pad(dateRange.end.month) : '';
+  const toDay = dateRange ? pad(dateRange.end.day) : '';
+  const toYear = dateRange ? String(dateRange.end.year) : '';
 
-  // Persist to sessionStorage on every relevant change
-  useEffect(() => {
-    const state: SavedState = { step, destination, fromMonth, fromDay, fromYear, toMonth, toDay, toYear };
+  const persistState = useCallback((nextStep = step) => {
+    const state: SavedState = {
+      step: nextStep,
+      destination,
+      fromMonth,
+      fromDay,
+      fromYear,
+      toMonth,
+      toDay,
+      toYear,
+      selectedDivision,
+      selectedDistrict,
+      selectedDistricts,
+      selectedTourSpots,
+    };
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
       // quota exceeded – silently ignore
     }
-  }, [step, destination, fromMonth, fromDay, fromYear, toMonth, toDay, toYear]);
+  }, [step, destination, fromMonth, fromDay, fromYear, toMonth, toDay, toYear, selectedDivision, selectedDistrict, selectedDistricts, selectedTourSpots]);
+
+  // Persist to sessionStorage on every relevant change
+  useEffect(() => {
+    persistState();
+  }, [persistState]);
 
   const canNext = useMemo(() => {
     if (step === 1) {
@@ -491,10 +395,17 @@ export default function BuildPackage() {
 
   const handleNext = useCallback(() => {
     if (step < 3 && canNext) {
-      setStep(step + 1);
-      scrollToTop();
+      const nextStep = step + 1;
+      setStep(nextStep);
+      // Save before navigating so the full builder opens directly at step two.
+      if (embedded) persistState(nextStep);
+      if (embedded) {
+        navigate('/build-package');
+      } else {
+        scrollToTop();
+      }
     }
-  }, [step, canNext]);
+  }, [step, canNext, embedded, navigate, persistState]);
 
   const handleBack = useCallback(() => {
     if (step > 1) {
@@ -512,15 +423,10 @@ export default function BuildPackage() {
     [],
   );
 
-  // Ensure "To" date is not before "From" date
-  const fromDate = new Date(Number(fromYear), Number(fromMonth) - 1, Number(fromDay));
-  const toDate = new Date(Number(toYear), Number(toMonth) - 1, Number(toDay));
-  const toMinYear = Number(fromYear);
-
-  // If to-date < from-date, auto-adjust to-date = from-date
-  const effectiveToMonth = toDate < fromDate ? fromMonth : toMonth;
-  const effectiveToDay = toDate < fromDate ? fromDay : toDay;
-  const effectiveToYear = toDate < fromDate ? fromYear : toYear;
+  // "To" date is normalized by the range picker; keep aliases for display
+  const effectiveToMonth = toMonth;
+  const effectiveToDay = toDay;
+  const effectiveToYear = toYear;
 
   // Build combined travel date string for the sidebar
   const travelDateDisplay = geo.loaded
@@ -528,10 +434,10 @@ export default function BuildPackage() {
     : formatDateDisplay(fromMonth, fromDay, fromYear);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24">
-      <div className="grid lg:grid-cols-3 gap-8">
+    <div className={embedded ? "w-full" : "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24"}>
+      <div className={embedded ? "w-full" : "grid lg:grid-cols-3 gap-8"}>
         {/* ── Left column: form ── */}
-        <div className="lg:col-span-2 space-y-6 min-w-0">
+        <div className={embedded ? "w-full space-y-6" : "lg:col-span-2 space-y-6 min-w-0"}>
           {/* Progress Bar */}
           <div>
             <div className="flex justify-between items-center mb-3">
@@ -557,7 +463,12 @@ export default function BuildPackage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="bg-card border border-border rounded-lg shadow-sm p-6 min-w-0"
+            className={cn(
+              "rounded-lg p-6 min-w-0",
+              embedded
+                ? "w-full"
+                : "bg-card border border-border shadow-sm",
+            )}
           >
           {/* Header */}
           <div className="relative text-center mb-6">
@@ -811,38 +722,16 @@ export default function BuildPackage() {
                     </motion.div>
                   )}
 
-                  {/* From Date */}
+                  {/* Travel Dates */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      From
+                      Travel Dates
                     </label>
-                    <DatePickerPopover
-                      label="Select start date"
-                      month={fromMonth}
-                      day={fromDay}
-                      year={fromYear}
-                      onMonthChange={setFromMonth}
-                      onDayChange={setFromDay}
-                      onYearChange={setFromYear}
-                      timezone={geo.timezone}
-                    />
-                  </div>
-
-                  {/* To Date */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      To
-                    </label>
-                    <DatePickerPopover
-                      label="Select end date"
-                      month={effectiveToMonth}
-                      day={effectiveToDay}
-                      year={effectiveToYear}
-                      onMonthChange={setToMonth}
-                      onDayChange={setToDay}
-                      onYearChange={setToYear}
-                      minYear={toMinYear}
-                      timezone={geo.timezone}
+                    <DateRangePicker
+                      aria-label="Travel date range"
+                      shouldCloseOnSelect={false}
+                      value={dateRange}
+                      onChange={setDateRange}
                     />
                   </div>
 
@@ -1000,7 +889,7 @@ export default function BuildPackage() {
           </form>
 
           {/* Back Button */}
-          {step > 1 && (
+          {step > 1 && !embedded && (
             <button
               type="button"
               onClick={handleBack}
@@ -1013,25 +902,25 @@ export default function BuildPackage() {
           </motion.div>
         </div>
 
-        {/* ── Right column: summary sidebar ── */}
-        <div className="lg:col-span-1">
-          <div className="lg:sticky lg:top-24">
-            <PackageSummary
-              destination={destinationGroups.flatMap((g) => g.items.map((i) => ({ ...i, group: g.category }))).find((i) => i.value === destination)?.name ?? null}
-              travelDate={travelDateDisplay}
-              numTravelers={1}
-              accommodationType=""
-              transportType=""
-              budget={0}
-              activities={[]}
-              specialRequests=""
-              currencyCode={geo.currency}
-              locale={geo.locale}
-              timezone={geo.timezone}
-            />
+        {!embedded && (
+          <div className="lg:col-span-1">
+            <div className="lg:sticky lg:top-24">
+              <PackageSummary
+                destination={destinationGroups.flatMap((g) => g.items.map((i) => ({ ...i, group: g.category }))).find((i) => i.value === destination)?.name ?? null}
+                travelDate={travelDateDisplay}
+                numTravelers={1}
+                accommodationType=""
+                transportType=""
+                budget={0}
+                activities={[]}
+                specialRequests=""
+                currencyCode={geo.currency}
+                locale={geo.locale}
+                timezone={geo.timezone}
+              />
+            </div>
           </div>
-        </div>
-      </div>
+        )}      </div>
     </div>
   );
 }

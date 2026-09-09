@@ -5,7 +5,7 @@ import { ScrollToTop } from './ScrollToTop'
 import { PhonePrompt } from './PhonePrompt'
 import { Footer3 } from '@/components/watermelon-ui/footer-3'
 import { footerNavigation } from '@/config/navigation'
-import { Mail, Instagram, Facebook, Twitter } from 'lucide-react'
+import { Instagram, Facebook } from 'lucide-react'
 
 type AppShellProps = {
   children: ReactNode
@@ -45,17 +45,15 @@ export function AppShell({ children }: AppShellProps) {
             {
               title: 'Contact',
               links: [
-                { label: 'support@blackpearl.travel', href: 'mailto:support@blackpearl.travel' },
-                { label: '+91 123 456 7890', href: 'tel:+911234567890' },
-                { label: 'Mumbai, India', href: '#' },
+                { label: 'Office #307, 300-Alisan Plaza, Elephant Road, Dhaka-1205', href: '#' },
+                { label: '01928319460', href: 'tel:+8801928319460' },
+                { label: 'blackpearltrip@gmail.com', href: 'mailto:blackpearltrip@gmail.com' },
               ],
             },
           ]}
           socialLinks={[
-            { icon: <Instagram className="h-4 w-4" />, href: 'https://instagram.com/blackpearl' },
-            { icon: <Facebook className="h-4 w-4" />, href: 'https://facebook.com/blackpearl' },
-            { icon: <Twitter className="h-4 w-4" />, href: 'https://twitter.com/blackpearl' },
-            { icon: <Mail className="h-4 w-4" />, href: 'mailto:support@blackpearl.travel' },
+            { icon: <Instagram className="h-4 w-4" />, href: 'https://instagram.com/blackpearl.bd' },
+            { icon: <Facebook className="h-4 w-4" />, href: 'https://facebook.com/blackpearl.bd' },
           ]}
           copyright={`© ${new Date().getFullYear()} BlackPearl. All rights reserved.`}
           legalLinks={[

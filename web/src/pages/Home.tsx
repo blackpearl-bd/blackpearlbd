@@ -6,7 +6,8 @@ import { DealGrid } from '@/components/deals/DealGrid';
 import { useDeals } from '@/hooks/useDeals';
 import { GlobePolaroids } from '@/components/ui/component';
 import { StarsBackground } from '@/components/ui/stars-background';
-import { MorphingTabs } from '@/components/watermelon-ui/morphing-tabs';
+import { CTabs6 } from '@/components/examples/c-tabs-6';
+import BuildPackageForm from '@/components/package-builder/BuildPackageForm';
 import { Compass, Star, ArrowRight, MapPin, Clock } from 'lucide-react';
 import { BuildPackageIcon } from '@/components/icons/BuildPackageIcon';
 import { formatCurrency } from '@/lib/utils';
@@ -14,7 +15,7 @@ import type { TourDeal } from '@/types';
 
 function TourDealsPreview({ deals }: { deals: TourDeal[] }) {
   return (
-    <div className="p-6">
+    <div>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Tour Deals</h3>
         <Link to="/deals" className="text-sm text-primary hover:underline flex items-center gap-1">
@@ -68,41 +69,7 @@ function TourDealsPreview({ deals }: { deals: TourDeal[] }) {
 }
 
 function BuildPackagePreview() {
-  const steps = [
-    { icon: Compass, label: 'Pick a destination', hint: 'Choose from 50+ destinations' },
-    { icon: BuildPackageIcon, label: 'Set your budget', hint: 'We tailor packages to your budget' },
-    { icon: Star, label: 'Customize activities', hint: 'Handpick what you love' },
-  ];
-
-  return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Build Your Own Package</h3>
-        <Link to="/build-package" className="text-sm text-primary hover:underline flex items-center gap-1">
-          Start building <ArrowRight className="w-3 h-3" />
-        </Link>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {steps.map((step, i) => (
-          <div key={i} className="rounded-xl border bg-card p-3">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
-              <step.icon className="w-4 h-4 text-primary" />
-            </div>
-            <h4 className="text-sm font-semibold">{step.label}</h4>
-            <p className="text-xs text-muted-foreground mt-0.5">{step.hint}</p>
-          </div>
-        ))}
-      </div>
-      <div className="mt-4 text-center">
-        <Link to="/build-package">
-          <Button size="sm">
-            Start Building
-            <ArrowRight className="w-4 h-4 ml-1" />
-          </Button>
-        </Link>
-      </div>
-    </div>
-  );
+  return <BuildPackageForm embedded />;
 }
 
 export default function Home() {
@@ -129,8 +96,11 @@ export default function Home() {
         {/* Edge-to-edge first screen: full viewport — topbar and mobile dock float above it */}
         <div className="flex min-h-[100dvh] flex-col items-center justify-center px-4 pt-20 pb-24 sm:px-6 md:pt-24 md:pb-12">
           <div className="w-full max-w-5xl mx-auto text-center">
-            {/* Globe — scales with visible screen height, big on every breakpoint */}
-            <div className="mx-auto mb-3 h-[50dvh] w-[50dvh] min-h-[240px] min-w-[240px] max-h-[440px] max-w-[440px] sm:mb-5 md:mb-6 md:h-[58dvh] md:w-[58dvh] md:max-h-[720px] md:max-w-[720px] lg:h-[62dvh] lg:w-[62dvh] lg:max-h-[840px] lg:max-w-[840px]">
+            {/* Globe — scales with visible screen height, big on every breakpoint.
+                Width = min(<dvh>, 100%) so it can never exceed its container:
+                a dvh-only width overflows on tall/narrow phones, and an
+                overflowing block with mx-auto gets margin:0 → shifts left. */}
+            <div className="mx-auto mb-3 w-[min(50dvh,100%)] min-w-[240px] max-w-[440px] sm:mb-5 md:mb-6 md:w-[min(58dvh,100%)] md:max-w-[720px] lg:w-[min(62dvh,100%)] lg:max-w-[840px]">
               <GlobePolaroids
                 onMotionChange={handleGlobeMotion}
                 onSelect={(m) => navigate(`/deals?destination=${encodeURIComponent(m.caption)}`)}
@@ -154,20 +124,20 @@ export default function Home() {
       {/* Quick access tabs — below the first screen */}
       <section className="py-8 sm:py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
         <div className="text-left w-full">
-          <MorphingTabs
+          <CTabs6
             defaultValue="tours"
             ariaLabel="Quick access"
             items={[
               {
                 id: 'tours',
                 label: 'Tour Deals',
-                icon: <Compass className="w-4 h-4" />,
+                icon: <Compass />,
                 content: <TourDealsPreview deals={allDeals} />,
               },
               {
                 id: 'packages',
                 label: 'Build Package',
-                icon: <BuildPackageIcon className="w-4 h-4" />,
+                icon: <BuildPackageIcon />,
                 content: <BuildPackagePreview />,
               },
             ]}

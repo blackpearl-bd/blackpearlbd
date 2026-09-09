@@ -187,13 +187,18 @@ export function GlobePolaroids({
             left: "anchor(center)",
             translate: `${m.offsetX ?? -50}% 0`,
             marginBottom: 5,
-            transform: `rotate(${m.rotate}deg)`,
+            // Keep the marker's rotation while scaling from the globe point.
+            // Cobe's visibility value goes from 0 (back-facing) to 1 (front-facing),
+            // so the same transition handles both the zoom-in and zoom-out states.
+            transform: `rotate(${m.rotate}deg) scale(calc(0.72 + var(--cobe-visible-${m.id}, 0) * 0.28))`,
+            transformOrigin: "center bottom",
+            willChange: "transform, opacity",
             // Root never captures the pointer (so globe dragging works around
             // invisible polaroids); the inner button re-enables hit testing.
             pointerEvents: "none" as const,
             opacity: `var(--cobe-visible-${m.id}, 0)`,
             filter: `blur(calc((1 - var(--cobe-visible-${m.id}, 0)) * 8px))`,
-            transition: "opacity 0.3s, filter 0.3s",
+            transition: "opacity 0.3s ease, transform 0.3s ease, filter 0.3s ease",
           }}
         >
           <button
