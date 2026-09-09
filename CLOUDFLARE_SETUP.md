@@ -23,6 +23,8 @@ Go to **Cloudflare Dashboard → Pages → Create/Configure project**
 VITE_SUPABASE_URL=https://lichnzimdpnmofvigtfg.supabase.co
 VITE_SUPABASE_ANON_KEY=<your-supabase-anon-key>
 VITE_API_URL=<your-worker-url>
+# Client-side only; restrict this key to your Pages domains in Geoapify if available.
+VITE_GEOAPIFY_API_KEY=<your-geoapify-api-key>
 ```
 
 Get your Supabase keys:

@@ -87,12 +87,18 @@ deals.post('/', authMiddleware, adminMiddleware, async (c) => {
 deals.patch('/:id', authMiddleware, adminMiddleware, async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
+  const result = CreateDealSchema.partial().safeParse(body);
+
+  if (!result.success) {
+    return c.json({ error: 'Invalid input', details: result.error.issues }, 400);
+  }
+
   const env = c.env as Env;
   const admin = createSupabaseAdminClient(env);
 
   const { data, error } = await admin
     .from('tour_deals')
-    .update({ ...body, updated_at: new Date().toISOString() })
+    .update({ ...result.data, updated_at: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single();

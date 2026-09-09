@@ -12,6 +12,18 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface Waypoint {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+/** GeoJSON LineString returned by Geoapify's routing endpoint. */
+export interface RouteGeometry {
+  type: 'LineString';
+  coordinates: [number, number][];
+}
+
 export interface TourDeal {
   id: string;
   deal_code: string | null;
@@ -29,6 +41,8 @@ export interface TourDeal {
   inclusions: string[];
   exclusions: string[];
   itinerary: ItineraryDay[];
+  route_waypoints: Waypoint[] | null;
+  route_geometry: RouteGeometry | null;
   is_active: boolean;
   is_featured: boolean;
   created_by: string | null;

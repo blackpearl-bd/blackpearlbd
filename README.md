@@ -90,6 +90,8 @@ npm run dev
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 VITE_API_URL=http://localhost:8787
+# Client-side only; restrict this key to your domains in Geoapify if available.
+VITE_GEOAPIFY_API_KEY=your-geoapify-api-key
 ```
 
 #### Worker (.dev.vars)

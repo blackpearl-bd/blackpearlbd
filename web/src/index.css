@@ -1,3 +1,21 @@
+@font-face {
+  font-family: 'SolaimanLipi';
+  src: url('../../../fonts/solaimanlipi/SolaimanLipi_22-02-2012.woff2') format('woff2'),
+       url('../../../fonts/solaimanlipi/SolaimanLipi_22-02-2012.woff') format('woff');
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SolaimanLipi';
+  src: url('../../../fonts/solaimanlipi/SolaimanLipi_Bold_10-03-12.woff2') format('woff2'),
+       url('../../../fonts/solaimanlipi/SolaimanLipi_Bold_10-03-12.woff') format('woff');
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -72,7 +90,27 @@
     @apply bg-background text-foreground;
     min-height: 100%;
     margin: 0;
+    font-family: 'SolaimanLipi', sans-serif;
   }
+}
+
+.deal-route-marker {
+  background: transparent;
+  border: 0;
+}
+
+.deal-route-marker span {
+  display: flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  border-radius: 9999px;
+  background: #2563eb;
+  color: white;
+  font: 600 13px/1 system-ui, sans-serif;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
 }
 
 @layer utilities {

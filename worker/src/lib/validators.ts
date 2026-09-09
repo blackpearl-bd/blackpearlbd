@@ -14,6 +14,17 @@ function optionalClean() {
   });
 }
 
+const WaypointSchema = z.object({
+  name: z.string().min(1).max(200),
+  lat: z.number().finite().min(-90).max(90),
+  lng: z.number().finite().min(-180).max(180),
+});
+
+const RouteGeometrySchema = z.object({
+  type: z.literal('LineString'),
+  coordinates: z.array(z.tuple([z.number().finite(), z.number().finite()])).min(2),
+});
+
 export const CreateDealSchema = z.object({
   title: z.string().min(3).max(200),
   slug: z.string().regex(/^[a-z0-9-]+$/),
@@ -33,6 +44,9 @@ export const CreateDealSchema = z.object({
     title: z.string(),
     description: z.string(),
   })).optional(),
+  route_waypoints: z.array(WaypointSchema).max(50).nullable().optional(),
+  // Generated once in the admin form and persisted for public, routing-free rendering.
+  route_geometry: RouteGeometrySchema.nullable().optional(),
   is_featured: z.boolean().optional(),
 });
 

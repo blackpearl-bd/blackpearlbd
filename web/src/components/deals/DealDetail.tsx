@@ -7,6 +7,7 @@ import { formatCurrency } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useSavedDeals } from '@/hooks/useDeals';
 import { BookingModal } from '@/components/bookings/BookingModal';
+import { DealRouteMap, isValidWaypoint } from '@/components/deals/DealRouteMap';
 import type { TourDeal } from '@/types';
 
 interface DealDetailProps {
@@ -20,6 +21,7 @@ export function DealDetail({ deal }: DealDetailProps) {
 
   const isSaved = savedDeals.some((sd) => sd.deal_id === deal.id);
   const savedDeal = savedDeals.find((sd) => sd.deal_id === deal.id);
+  const routeWaypoints = (deal.route_waypoints || []).filter(isValidWaypoint);
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -122,6 +124,28 @@ export function DealDetail({ deal }: DealDetailProps) {
           <p className="text-muted-foreground whitespace-pre-wrap">{deal.description}</p>
         </CardContent>
       </Card>
+
+      {/* Stored route — public pages only render the saved geometry; no routing API call. */}
+      {routeWaypoints.length > 0 && (
+        <Card className="mb-6 overflow-hidden">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-xl"><MapPin className="h-5 w-5 text-secondary" />Tour route</CardTitle>
+            <p className="text-sm text-muted-foreground">Follow the stops in order from start to finish.</p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <DealRouteMap waypoints={routeWaypoints} geometry={deal.route_geometry} className="h-[300px] w-full rounded-none border-0 sm:h-[440px]" />
+            <ol aria-label="Tour route stops" className="grid gap-2 border-t p-4 sm:grid-cols-2">
+              {routeWaypoints.map((waypoint, index) => (
+                <li key={`${waypoint.lat}-${waypoint.lng}-${index}`} className="flex min-h-10 items-center gap-3 rounded-md bg-muted/50 px-3 py-2 text-sm">
+                  <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">{index + 1}</span>
+                  <span className="min-w-0 truncate">{waypoint.name || `Stop ${index + 1}`}</span>
+                </li>
+              ))}
+            </ol>
+            {routeWaypoints.length === 1 && <p className="px-4 pb-4 text-xs text-muted-foreground">This tour has one marked stop; no driving route is shown.</p>}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Itinerary */}
       {deal.itinerary && deal.itinerary.length > 0 && (
