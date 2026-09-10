@@ -35,3 +35,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: npx wrangler deploy
+
+# Required repo secret: CLOUDFLARE_API_TOKEN (Workers Scripts: Edit)
+# Set in GitHub → Settings → Secrets and variables → Actions → New repository secret
+# Use the same API token that was used to deploy the worker manually.
