@@ -1,7 +1,7 @@
 @font-face {
   font-family: 'SolaimanLipi';
-  src: url('../../../fonts/solaimanlipi/SolaimanLipi_22-02-2012.woff2') format('woff2'),
-       url('../../../fonts/solaimanlipi/SolaimanLipi_22-02-2012.woff') format('woff');
+  src: url('/fonts/solaimanlipi/SolaimanLipi_22-02-2012.woff2') format('woff2'),
+       url('/fonts/solaimanlipi/SolaimanLipi_22-02-2012.woff') format('woff');
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -9,8 +9,8 @@
 
 @font-face {
   font-family: 'SolaimanLipi';
-  src: url('../../../fonts/solaimanlipi/SolaimanLipi_Bold_10-03-12.woff2') format('woff2'),
-       url('../../../fonts/solaimanlipi/SolaimanLipi_Bold_10-03-12.woff') format('woff');
+  src: url('/fonts/solaimanlipi/SolaimanLipi_Bold_10-03-12.woff2') format('woff2'),
+       url('/fonts/solaimanlipi/SolaimanLipi_Bold_10-03-12.woff') format('woff');
   font-style: normal;
   font-weight: 700;
   font-display: swap;

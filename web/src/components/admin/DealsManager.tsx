@@ -148,7 +148,11 @@ export function DealsManager() {
     setIsGeneratingRoute(true);
     setRouteMessage('');
     try {
-      const waypoints = formData.route_waypoints.map((point) => `${point.lat},${point.lng}`).join('|');
+      // Round to 4 decimal places (~11m precision) — Geoapify may reject
+      // full-precision Leaflet coordinates that land between road segments.
+      const waypoints = formData.route_waypoints
+        .map((point) => `${point.lat.toFixed(4)},${point.lng.toFixed(4)}`)
+        .join('|');
       const response = await fetch(`https://api.geoapify.com/v1/routing?waypoints=${encodeURIComponent(waypoints)}&mode=drive&apiKey=${encodeURIComponent(geoapifyKey)}`);
       if (!response.ok) throw new Error('Routing request failed');
       const payload = await response.json();
