@@ -220,6 +220,7 @@ export function DealsManager() {
     // A reference point in a well-mapped urban area (Dhaka Farmgate).
     // If even this fails, fall back to the first pin as a safe default.
     const refPoint: Waypoint = { lat: 23.8103, lng: 90.4125, name: 'Reference' };
+    if (!geoapifyKey) return null;
     const routeUrl = (w: string) =>
       `https://api.geoapify.com/v1/routing?waypoints=${encodeURIComponent(w)}&mode=drive&apiKey=${encodeURIComponent(geoapifyKey)}`;
     for (let i = 0; i < points.length; i++) {
@@ -380,7 +381,7 @@ export function DealsManager() {
                 </div>
                 <p className="mt-1 text-[11px] text-muted-foreground">Search results are powered by Geoapify. OSM map tiles are used for display.</p>
                 {searchMessage && <p className="mt-2 text-xs text-amber-700" role="status">{searchMessage}</p>}
-                {searchResults.length > 0 && <div className="mt-2 divide-y rounded-md border bg-background">{searchResults.map((result, index) => <button type="button" key={result.place_id || `${result.lat}-${result.lon}-${index}`} className="block min-h-11 w-full px-3 py-2 text-left text-sm hover:bg-muted focus-visible:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" onClick={() => addWaypoint({ name: result.formatted || result.name || 'Selected place', lat: result.lat, lng: result.lon })}>{result.formatted || result.name}</button>)}</div>}
+                {searchResults.length > 0 && <div className="mt-2 divide-y rounded-md border bg-background">{searchResults.map((result, index) => <button type="button" key={result.place_id ?? `${result.lat}-${result.lon}-${index}`} className="block min-h-11 w-full px-3 py-2 text-left text-sm hover:bg-muted focus-visible:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" onClick={() => { const _name: string = result.formatted ?? result.name ?? 'Selected place'; addWaypoint({ name: _name, lat: result.lat, lng: result.lon }); }}>{result.formatted ?? result.name ?? 'Selected place'}</button>)}</div>}
                 <DealRouteMap waypoints={formData.route_waypoints} geometry={formData.route_geometry} editable onMapClick={addMapWaypoint} className="mt-3 h-72" />
                 <div className="mt-3 space-y-2">
                   {formData.route_waypoints.map((point, index) => <div
