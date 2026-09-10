@@ -212,13 +212,20 @@ export function DealsManager() {
     setRouteWaypoints(formData.route_waypoints.filter((_, itemIndex) => itemIndex !== index));
   };
 
-  // When the full route fails with a 400, test each pin solo to find
-  // which one lands in an area with no road data.
+  // When the full route fails with a 400, test each pin paired with a
+  // known-good reference point to find which one lands in an area with
+  // no road data. A single-pin routing call would return 400 for an
+  // unrelated reason ("Insufficient number of locations").
   const findBadPin = async (points: Waypoint[]): Promise<number | null> => {
-    const soloUrl = (lat: number, lng: number) =>
-      `https://api.geoapify.com/v1/routing?waypoints=${lat.toFixed(4)},${lng.toFixed(4)}&mode=drive&apiKey=${encodeURIComponent(geoapifyKey)}`;
+    // A reference point in a well-mapped urban area (Dhaka Farmgate).
+    // If even this fails, fall back to the first pin as a safe default.
+    const refPoint: Waypoint = { lat: 23.8103, lng: 90.4125, name: 'Reference' };
+    const routeUrl = (w: string) =>
+      `https://api.geoapify.com/v1/routing?waypoints=${encodeURIComponent(w)}&mode=drive&apiKey=${encodeURIComponent(geoapifyKey)}`;
     for (let i = 0; i < points.length; i++) {
-      const r = await fetch(soloUrl(points[i].lat, points[i].lng));
+      const r = await fetch(
+        routeUrl(`${refPoint.lat.toFixed(4)},${refPoint.lng.toFixed(4)}|${points[i].lat.toFixed(4)},${points[i].lng.toFixed(4)}`),
+      );
       if (!r.ok) return i;
     }
     return null;
