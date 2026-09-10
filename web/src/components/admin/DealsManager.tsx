@@ -148,13 +148,27 @@ export function DealsManager() {
     setIsGeneratingRoute(true);
     setRouteMessage('');
     try {
+      const makeWaypoints = (points: Waypoint[]) =>
+        points.map((point) => `${point.lat.toFixed(4)},${point.lng.toFixed(4)}`).join('|');
+      const routeUrl = (waypoints: string) =>
+        `https://api.geoapify.com/v1/routing?waypoints=${encodeURIComponent(waypoints)}&mode=drive&apiKey=${encodeURIComponent(geoapifyKey)}`;
+
       // Round to 4 decimal places (~11m precision) — Geoapify may reject
       // full-precision Leaflet coordinates that land between road segments.
-      const waypoints = formData.route_waypoints
-        .map((point) => `${point.lat.toFixed(4)},${point.lng.toFixed(4)}`)
-        .join('|');
-      const response = await fetch(`https://api.geoapify.com/v1/routing?waypoints=${encodeURIComponent(waypoints)}&mode=drive&apiKey=${encodeURIComponent(geoapifyKey)}`);
-      if (!response.ok) throw new Error('Routing request failed');
+      const allWaypoints = makeWaypoints(formData.route_waypoints);
+      let response = await fetch(routeUrl(allWaypoints));
+
+      if (!response.ok) {
+        // 400 "No suitable edges" can mean one pin is in an unmapped area.
+        // Try each pin solo to find the culprit.
+        const badPinIndex = await findBadPin(formData.route_waypoints);
+        if (badPinIndex != null) {
+          const name = formData.route_waypoints[badPinIndex]?.name || `Stop ${badPinIndex + 1}`;
+          throw new Error(`Bad stop: "${name}" — the pin is in an area with no road data. Move it to a nearby road or town.`);
+        }
+        throw new Error('Routing request failed');
+      }
+
       const payload = await response.json();
       const geometry = extractRouteGeometry(payload);
       const properties = payload?.features?.[0]?.properties || payload?.routes?.[0];
@@ -162,10 +176,10 @@ export function DealsManager() {
       setFormData((current) => ({ ...current, route_geometry: geometry }));
       setRouteStats({ distance: Number(properties?.distance || 0), time: Number(properties?.time || 0) });
       setRouteMessage('Route generated and ready to save.');
-    } catch {
+    } catch (err: any) {
       setFormData((current) => ({ ...current, route_geometry: null }));
       setRouteStats(null);
-      setRouteMessage('Route unavailable — drop a point manually or try again. The waypoints can still be saved.');
+      setRouteMessage(err.message || 'Route unavailable — drop a point manually or try again. The waypoints can still be saved.');
     } finally {
       setIsGeneratingRoute(false);
     }
@@ -196,6 +210,18 @@ export function DealsManager() {
 
   const removeWaypoint = (index: number) => {
     setRouteWaypoints(formData.route_waypoints.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  // When the full route fails with a 400, test each pin solo to find
+  // which one lands in an area with no road data.
+  const findBadPin = async (points: Waypoint[]): Promise<number | null> => {
+    const soloUrl = (lat: number, lng: number) =>
+      `https://api.geoapify.com/v1/routing?waypoints=${lat.toFixed(4)},${lng.toFixed(4)}&mode=drive&apiKey=${encodeURIComponent(geoapifyKey)}`;
+    for (let i = 0; i < points.length; i++) {
+      const r = await fetch(soloUrl(points[i].lat, points[i].lng));
+      if (!r.ok) return i;
+    }
+    return null;
   };
 
   const addMapWaypoint = ({ lat, lng }: { lat: number; lng: number }) => {
