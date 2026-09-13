@@ -163,14 +163,26 @@ export function DealsManager() {
       let response = await fetch(routeUrl(allWaypoints));
 
       if (!response.ok) {
-        // 400 "No suitable edges" can mean one pin is in an unmapped area.
-        // Try each pin solo to find the culprit.
-        const badPinIndex = await findBadPin(formData.route_waypoints);
-        if (badPinIndex != null) {
-          const name = formData.route_waypoints[badPinIndex]?.name || `Stop ${badPinIndex + 1}`;
-          throw new Error(`Bad stop: "${name}" — the pin is in an area with no road data. Move it to a nearby road or town.`);
+        // Some pins may be off-road. Snap them to nearest road and retry.
+        setRouteMessage('Some stops are off-road. Snapping to nearest roads...');
+        const badIndices = await findBadPins(formData.route_waypoints);
+        if (badIndices.length === 0) throw new Error('Routing request failed');
+
+        // Snap each bad pin to nearest road
+        const snapped = [...formData.route_waypoints];
+        for (const idx of badIndices) {
+          snapped[idx] = await snapToNearestRoad(snapped[idx]);
         }
-        throw new Error('Routing request failed');
+
+        // Update waypoints with snapped coordinates
+        setFormData((current) => ({ ...current, route_waypoints: snapped }));
+
+        // Retry with snapped waypoints
+        const retryWaypoints = makeWaypoints(snapped);
+        response = await fetch(routeUrl(retryWaypoints));
+        if (!response.ok) {
+          throw new Error('Could not find roads for some stops. Try moving them closer to a road or town.');
+        }
       }
 
       const payload = await response.json();
@@ -216,24 +228,45 @@ export function DealsManager() {
     setRouteWaypoints(formData.route_waypoints.filter((_, itemIndex) => itemIndex !== index));
   };
 
-  // When the full route fails with a 400, test each pin paired with a
-  // known-good reference point to find which one lands in an area with
-  // no road data. A single-pin routing call would return 400 for an
-  // unrelated reason ("Insufficient number of locations").
-  const findBadPin = async (points: Waypoint[]): Promise<number | null> => {
-    // A reference point in a well-mapped urban area (Dhaka Farmgate).
-    // If even this fails, fall back to the first pin as a safe default.
+  // Snap a waypoint to the nearest road using reverse geocoding.
+  const snapToNearestRoad = async (point: Waypoint): Promise<Waypoint> => {
+    if (!geoapifyKey) return point;
+    try {
+      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${point.lat}&lon=${point.lng}&apiKey=${encodeURIComponent(geoapifyKey)}`;
+      const res = await fetch(url);
+      if (!res.ok) return point;
+      const data = await res.json();
+      const feature = data.features?.[0];
+      if (!feature) return point;
+      const [lon, lat] = feature.geometry?.coordinates || [];
+      const address = feature.properties?.formatted;
+      if (Number.isFinite(lat) && Number.isFinite(lon)) {
+        return {
+          lat,
+          lng: lon,
+          name: address || point.name,
+        };
+      }
+    } catch {
+      // Ignore errors, return original point
+    }
+    return point;
+  };
+
+  // Test each pin against a known-good reference to find bad ones.
+  const findBadPins = async (points: Waypoint[]): Promise<number[]> => {
     const refPoint: Waypoint = { lat: 23.8103, lng: 90.4125, name: 'Reference' };
-    if (!geoapifyKey) return null;
+    if (!geoapifyKey) return [];
     const routeUrl = (w: string) =>
       `https://api.geoapify.com/v1/routing?waypoints=${encodeURIComponent(w)}&mode=drive&apiKey=${encodeURIComponent(geoapifyKey)}`;
+    const badIndices: number[] = [];
     for (let i = 0; i < points.length; i++) {
       const r = await fetch(
         routeUrl(`${refPoint.lat.toFixed(4)},${refPoint.lng.toFixed(4)}|${points[i].lat.toFixed(4)},${points[i].lng.toFixed(4)}`),
       );
-      if (!r.ok) return i;
+      if (!r.ok) badIndices.push(i);
     }
-    return null;
+    return badIndices;
   };
 
   const addMapWaypoint = ({ lat, lng }: { lat: number; lng: number }) => {
