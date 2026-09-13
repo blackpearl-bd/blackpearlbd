@@ -50,38 +50,37 @@ upload.post('/image', authMiddleware, adminMiddleware, async (c) => {
       },
     });
 
-    // Return the public URL
-    const publicUrl = `https://blackpearl-assets.${c.req.header('host')?.replace('api.', '') || 'ms-blackpearlbd.workers.dev'}/${key}`;
+    // Return the URL served through this Worker
+    const host = c.req.header('host') || 'blackpearl-api.ms-blackpearlbd.workers.dev';
+    const publicUrl = `https://${host}/upload/image/${key}`;
 
     return c.json({ url: publicUrl, key });
   }
 
-  // Handle raw body (base64 or binary)
-  const body = await c.req.arrayBuffer();
-  const ext = c.req.header('x-file-ext') || 'jpg';
-  const mime = contentType || 'image/jpeg';
 
-  if (!ALLOWED_TYPES.includes(mime)) {
-    return c.json({ error: 'Invalid file type' }, 400);
+});
+
+// Serve image from R2 (public)
+upload.get('/image/:key+', async (c) => {
+  const env = c.env as Env;
+  const key = c.req.param('key') as string;
+
+  if (!env.BLACKPEARL_BUCKET) {
+    return c.json({ error: 'Storage not configured' }, 500);
   }
 
-  if (body.byteLength > MAX_SIZE) {
-    return c.json({ error: 'File too large. Maximum size: 5MB' }, 400);
+  const object = await env.BLACKPEARL_BUCKET.get(key);
+
+  if (!object) {
+    return c.json({ error: 'Image not found' }, 404);
   }
 
-  const random = Math.random().toString(36).substring(2, 8);
-  const key = `deals/${Date.now()}-${random}.${ext}`;
+  const headers = new Headers();
+  object.writeHttpMetadata(headers);
+  headers.set('etag', object.httpEtag);
+  headers.set('cache-control', 'public, max-age=31536000, immutable');
 
-  await env.BLACKPEARL_BUCKET.put(key, body, {
-    httpMetadata: {
-      contentType: mime,
-      cacheControl: 'public, max-age=31536000, immutable',
-    },
-  });
-
-  const publicUrl = `https://blackpearl-assets.${c.req.header('host')?.replace('api.', '') || 'ms-blackpearlbd.workers.dev'}/${key}`;
-
-  return c.json({ url: publicUrl, key });
+  return new Response(object.body, { headers });
 });
 
 // Delete image from R2 (admin only)
