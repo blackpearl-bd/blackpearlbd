@@ -257,7 +257,9 @@ export function DealsManager() {
       setIsCreateModalOpen(false);
       resetForm();
     } catch (error: any) {
-      toast.error(error?.message || 'Failed to create deal');
+      const msg = error?.message || 'Failed to create deal';
+      toast.error(msg);
+      console.error('Create deal error:', error);
     } finally {
       setIsSubmitting(false);
     }
