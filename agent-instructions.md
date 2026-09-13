@@ -11,7 +11,7 @@ BlackPearl is a production-deployed tours & travel agency platform. Two roles: *
 **Live URLs:**
 - Frontend: `https://blackpearlbd.pages.dev`
 - API: `https://blackpearl-api.ms-blackpearlbd.workers.dev`
-- GitHub: `blackpearl-bd/blackpearlbd` (push to `main` auto-deploys Pages)
+- GitHub: `November-Saiful/blackpearlbd` (push to `main` auto-deploys Pages)
 - Supabase: `lichnzimdpnmofvigtfg`
 
 **Core Modules:**
@@ -267,7 +267,7 @@ manualChunks: {
 ## 8. Deployment
 
 ### Cloudflare Pages (Frontend) — Auto-deploy from GitHub
-- **Repo**: `blackpearl-bd/blackpearlbd`, branch: `main`
+- **Repo**: `November-Saiful/blackpearlbd`, branch: `main`
 - **Root directory**: `web`
 - **Build command**: `npm install && npm run build`
 - **Output**: `dist`
