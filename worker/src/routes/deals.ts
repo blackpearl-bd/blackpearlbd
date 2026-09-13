@@ -74,10 +74,11 @@ deals.post('/', authMiddleware, adminMiddleware, async (c) => {
     .single();
 
   if (error) {
+    console.error('Supabase insert error:', JSON.stringify(error));
     if (error.code === '23505') {
       return c.json({ error: 'A deal with this slug already exists' }, 409);
     }
-    return c.json({ error: 'Failed to create deal' }, 500);
+    return c.json({ error: 'Failed to create deal', details: error.message }, 500);
   }
 
   return c.json({ deal: data }, 201);
