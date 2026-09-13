@@ -1,6 +1,6 @@
 # Cloudflare Deployment Setup
 
-Your code is pushed to `November-Saiful/blackpearlbd`. Configure these in the Cloudflare dashboard:
+Your code is pushed to `november-saiful/blackpearlbd`. Configure these in the Cloudflare dashboard:
 
 ---
 
@@ -10,7 +10,7 @@ Go to **Cloudflare Dashboard → Pages → Create/Configure project**
 
 | Setting | Value |
 |---------|-------|
-| **Repository** | `November-Saiful/blackpearlbd` |
+| **Repository** | `november-saiful/blackpearlbd` |
 | **Branch** | `main` |
 | **Root directory** | `web` |
 | **Build command** | `npm install && npm run build` |
@@ -40,7 +40,7 @@ Go to **Cloudflare Dashboard → Workers & Pages → Create/Configure project**
 
 | Setting | Value |
 |---------|-------|
-| **Repository** | `November-Saiful/blackpearlbd` |
+| **Repository** | `november-saiful/blackpearlbd` |
 | **Branch** | `master` |
 | **Root directory** | `worker` |
 
