@@ -51,8 +51,7 @@ upload.post('/image', authMiddleware, adminMiddleware, async (c) => {
     });
 
     // Return the URL served through this Worker
-    const host = c.req.header('host') || 'blackpearl-api.ms-blackpearlbd.workers.dev';
-    const publicUrl = `https://${host}/upload/image/${key}`;
+    const publicUrl = `https://blackpearl-api.ms-blackpearlbd.workers.dev/upload/image/${key}`;
 
     return c.json({ url: publicUrl, key });
   }

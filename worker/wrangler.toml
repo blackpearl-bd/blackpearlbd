@@ -21,6 +21,4 @@ compatibility_date = "2024-01-01"
 # uploaded separately via `wrangler secret put` and never stored in this file.
 
 # R2 bucket for file storage (deal images, etc.)
-[[r2_buckets]]
-binding = "BLACKPEARL_BUCKET"
-bucket_name = "blackpearl-assets"
+r2_buckets = [{ binding = "BLACKPEARL_BUCKET", bucket_name = "blackpearl-assets" }]
