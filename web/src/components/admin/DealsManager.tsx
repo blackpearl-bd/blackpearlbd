@@ -9,6 +9,7 @@ import { Plus, Edit, Trash2, Package, Loader2, Search, MapPin, ChevronUp, Chevro
 import { formatCurrency } from '@/lib/utils';
 import { useDeals } from '@/hooks/useDeals';
 import { api } from '@/lib/api';
+import { compressImage } from '@/lib/image-compress';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { DealRouteMap } from '@/components/deals/DealRouteMap';
@@ -345,7 +346,9 @@ export function DealsManager() {
     setIsUploading(true);
 
     try {
-      const { url } = await api.uploadImage(file);
+      // Compress before upload (skips if already small)
+      const compressed = await compressImage(file);
+      const { url } = await api.uploadImage(compressed);
       setFormData((current) => ({ ...current, image_url: url }));
       setImagePreview(url);
       toast.success('Image uploaded successfully');
