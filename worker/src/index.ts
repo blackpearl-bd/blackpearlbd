@@ -7,6 +7,7 @@ import customPackages from './routes/custom-packages';
 import bookings from './routes/bookings';
 import savedDeals from './routes/saved-deals';
 import admin from './routes/admin';
+import upload from './routes/upload';
 
 const app = new Hono();
 
@@ -26,6 +27,7 @@ app.route('/custom-packages', customPackages);
 app.route('/bookings', bookings);
 app.route('/saved-deals', savedDeals);
 app.route('/admin', admin);
+app.route('/upload', upload);
 
 // 404 handler
 app.notFound((c) => {

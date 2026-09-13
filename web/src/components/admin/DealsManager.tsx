@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Package, Loader2, Search, MapPin, ChevronUp, ChevronDown, X, GripVertical } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Loader2, Search, MapPin, ChevronUp, ChevronDown, X, GripVertical, Upload } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useDeals } from '@/hooks/useDeals';
 import { api } from '@/lib/api';
@@ -83,6 +83,9 @@ export function DealsManager() {
   const [routeMessage, setRouteMessage] = useState('');
   const [routeStats, setRouteStats] = useState<{ distance: number; time: number } | null>(null);
   const [draggingWaypointIndex, setDraggingWaypointIndex] = useState<number | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const setRouteWaypoints = (waypoints: Waypoint[]) => {
     setFormData((current) => ({ ...current, route_waypoints: waypoints, route_geometry: null }));
@@ -297,6 +300,7 @@ export function DealsManager() {
   const resetForm = () => {
     setFormData({ ...emptyForm, route_waypoints: [] });
     resetRouteUi();
+    setImagePreview(null);
   };
 
   const openEditModal = (deal: TourDeal) => {
@@ -309,6 +313,7 @@ export function DealsManager() {
       inclusions: (deal.inclusions || []).join('\n'), exclusions: (deal.exclusions || []).join('\n'),
       is_featured: deal.is_featured, route_waypoints: deal.route_waypoints || [], route_geometry: deal.route_geometry || null,
     });
+    setImagePreview(deal.image_url || null);
     resetRouteUi();
     setIsEditModalOpen(true);
   };
@@ -317,6 +322,47 @@ export function DealsManager() {
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     resetForm();
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type and size
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Invalid file type. Allowed: JPEG, PNG, WebP, AVIF');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File too large. Maximum size: 5MB');
+      return;
+    }
+
+    // Show local preview immediately
+    const localPreview = URL.createObjectURL(file);
+    setImagePreview(localPreview);
+    setIsUploading(true);
+
+    try {
+      const { url } = await api.uploadImage(file);
+      setFormData((current) => ({ ...current, image_url: url }));
+      setImagePreview(url);
+      toast.success('Image uploaded successfully');
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to upload image');
+      setImagePreview(null);
+    } finally {
+      setIsUploading(false);
+      // Reset file input so the same file can be re-selected
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const removeImage = () => {
+    setFormData((current) => ({ ...current, image_url: '' }));
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -366,7 +412,64 @@ export function DealsManager() {
               <div><Label>Original Price</Label><Input type="number" value={formData.original_price} onChange={(e) => setFormData({ ...formData, original_price: Number(e.target.value) })} /></div>
               <div><Label>Duration (Days) *</Label><Input type="number" value={formData.duration_days} onChange={(e) => setFormData({ ...formData, duration_days: Number(e.target.value) })} /></div>
               <div><Label>Max Travelers</Label><Input type="number" value={formData.max_travelers} onChange={(e) => setFormData({ ...formData, max_travelers: Number(e.target.value) })} /></div>
-              <div className="col-span-1 sm:col-span-2"><Label>Image URL</Label><Input value={formData.image_url} onChange={(e) => setFormData({ ...formData, image_url: e.target.value })} /></div>
+              <div className="col-span-1 sm:col-span-2">
+                <Label>Deal Image</Label>
+                {imagePreview ? (
+                  <div className="relative mt-2">
+                    <img src={imagePreview} alt="Deal preview" className="w-full h-48 object-cover rounded-md border" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="absolute top-2 right-2 h-8 w-8"
+                      onClick={removeImage}
+                      disabled={isUploading}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                    {formData.image_url && (
+                      <p className="mt-1 text-xs text-muted-foreground truncate">{formData.image_url}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div
+                    className="mt-2 flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed p-6 text-center cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+                    ) : (
+                      <Upload className="w-8 h-8 text-muted-foreground" />
+                    )}
+                    <p className="text-sm text-muted-foreground">
+                      {isUploading ? 'Uploading...' : 'Click to upload an image'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">JPEG, PNG, WebP, AVIF · Max 5MB</p>
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/avif"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                  disabled={isUploading}
+                />
+                {!imagePreview && (
+                  <div className="mt-2">
+                    <Label className="text-xs text-muted-foreground">Or paste image URL</Label>
+                    <Input
+                      value={formData.image_url}
+                      onChange={(e) => {
+                        setFormData({ ...formData, image_url: e.target.value });
+                        setImagePreview(e.target.value || null);
+                      }}
+                      placeholder="https://example.com/image.jpg"
+                      className="mt-1"
+                    />
+                  </div>
+                )}
+              </div>
               <div><Label>Inclusions (one per line)</Label><Textarea value={formData.inclusions} onChange={(e) => setFormData({ ...formData, inclusions: e.target.value })} rows={4} /></div>
               <div><Label>Exclusions (one per line)</Label><Textarea value={formData.exclusions} onChange={(e) => setFormData({ ...formData, exclusions: e.target.value })} rows={4} /></div>
 

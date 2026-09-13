@@ -42,6 +42,28 @@ export const api = {
   getProfilePending: () => fetchApi<{ bookings: Booking[] }>('/profile/pending'),
   getProfilePearls: () => fetchApi<{ history: PearlsHistory[] }>('/profile/pearls'),
 
+  // Upload
+  uploadImage: async (file: File): Promise<{ url: string; key: string }> => {
+    const { supabase } = await import('./supabase');
+    const { data: { session } } = await supabase.auth.getSession();
+    const headers: Record<string, string> = {};
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(`${API_URL}/upload/image`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: 'Upload failed' }));
+      throw new Error(error.error || `Upload failed: HTTP ${response.status}`);
+    }
+    return response.json();
+  },
+
   // Deals
   getDeals: () => fetchApi<{ deals: TourDeal[] }>('/deals'),
   getDeal: (slug: string) => fetchApi<{ deal: TourDeal }>(`/deals/${slug}`),

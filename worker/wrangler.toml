@@ -20,7 +20,7 @@ compatibility_date = "2024-01-01"
 # Secrets (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY) are
 # uploaded separately via `wrangler secret put` and never stored in this file.
 
-# R2 bucket (optional, for file storage)
-# [[r2_buckets]]
-# binding = "BLACKPEARL_BUCKET"
-# bucket_name = "blackpearl-assets"
+# R2 bucket for file storage (deal images, etc.)
+[[r2_buckets]]
+binding = "BLACKPEARL_BUCKET"
+bucket_name = "blackpearl-assets"
