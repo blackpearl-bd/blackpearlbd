@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSavedDeals } from '@/hooks/useDeals';
 import { BookingModal } from '@/components/bookings/BookingModal';
 import { DealRouteMap, isValidWaypoint } from '@/components/deals/DealRouteMap';
+import { DealTimeline } from '@/components/deals/DealTimeline';
 import type { TourDeal } from '@/types';
 
 interface DealDetailProps {
@@ -147,21 +148,14 @@ export function DealDetail({ deal }: DealDetailProps) {
         </Card>
       )}
 
-      {/* Itinerary */}
+      {/* Timeline Itinerary */}
       {deal.itinerary && deal.itinerary.length > 0 && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Itinerary</CardTitle>
+            <CardTitle>Tour Itinerary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {deal.itinerary.map((day) => (
-                <div key={day.day} className="border-l-2 border-secondary pl-4">
-                  <h4 className="font-semibold text-primary">Day {day.day}: {day.title}</h4>
-                  <p className="text-muted-foreground mt-1">{day.description}</p>
-                </div>
-              ))}
-            </div>
+            <DealTimeline itinerary={deal.itinerary} />
           </CardContent>
         </Card>
       )}

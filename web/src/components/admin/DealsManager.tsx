@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Package, Loader2, Search, MapPin, ChevronUp, ChevronDown, X, GripVertical, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Loader2, Search, MapPin, ChevronUp, ChevronDown, X, GripVertical, Upload, Calendar } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useDeals } from '@/hooks/useDeals';
 import { api } from '@/lib/api';
@@ -13,7 +13,7 @@ import { compressImage } from '@/lib/image-compress';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { DealRouteMap } from '@/components/deals/DealRouteMap';
-import type { RouteGeometry, TourDeal, Waypoint } from '@/types';
+import type { ItineraryDay, RouteGeometry, TourDeal, Waypoint } from '@/types';
 
 interface GeoapifyResult {
   place_id?: string;
@@ -42,12 +42,14 @@ type DealFormData = {
   is_featured: boolean;
   route_waypoints: Waypoint[];
   route_geometry: RouteGeometry | null;
+  itinerary: ItineraryDay[];
 };
 
 const emptyForm: DealFormData = {
   title: '', slug: '', description: '', short_description: '', destination: '',
   price: 0, original_price: 0, duration_days: 1, max_travelers: 0, image_url: '',
   inclusions: '', exclusions: '', is_featured: false, route_waypoints: [], route_geometry: null,
+  itinerary: [],
 };
 
 function extractRouteGeometry(payload: any): RouteGeometry | null {
@@ -279,6 +281,7 @@ export function DealsManager() {
     exclusions: formData.exclusions.split('\n').filter(Boolean),
     route_waypoints: formData.route_waypoints.length > 0 ? formData.route_waypoints : null,
     route_geometry: formData.route_geometry,
+    itinerary: formData.itinerary.length > 0 ? formData.itinerary : undefined,
   });
 
   const handleCreate = async () => {
@@ -348,6 +351,7 @@ export function DealsManager() {
       max_travelers: deal.max_travelers || 0, image_url: deal.image_url || '',
       inclusions: (deal.inclusions || []).join('\n'), exclusions: (deal.exclusions || []).join('\n'),
       is_featured: deal.is_featured, route_waypoints: deal.route_waypoints || [], route_geometry: deal.route_geometry || null,
+      itinerary: (deal.itinerary || []).map((d, i) => ({ day: i + 1, title: d.title, description: d.description })),
     });
     setImagePreview(deal.image_url || null);
     resetRouteUi();
@@ -401,6 +405,45 @@ export function DealsManager() {
     setFormData((current) => ({ ...current, image_url: '' }));
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // Itinerary management
+  const addItineraryDay = () => {
+    const nextDay = formData.itinerary.length + 1;
+    setFormData((current) => ({
+      ...current,
+      itinerary: [...current.itinerary, { day: nextDay, title: '', description: '' }],
+    }));
+  };
+
+  const removeItineraryDay = (index: number) => {
+    setFormData((current) => ({
+      ...current,
+      itinerary: current.itinerary
+        .filter((_, i) => i !== index)
+        .map((d, i) => ({ ...d, day: i + 1 })),
+    }));
+  };
+
+  const updateItineraryDay = (index: number, field: keyof ItineraryDay, value: string | number) => {
+    setFormData((current) => ({
+      ...current,
+      itinerary: current.itinerary.map((d, i) =>
+        i === index ? { ...d, [field]: value } : d,
+      ),
+    }));
+  };
+
+  const moveItineraryDay = (index: number, direction: -1 | 1) => {
+    const nextIndex = index + direction;
+    if (nextIndex < 0 || nextIndex >= formData.itinerary.length) return;
+    const items = [...formData.itinerary];
+    const [moved] = items.splice(index, 1);
+    items.splice(nextIndex, 0, moved);
+    setFormData((current) => ({
+      ...current,
+      itinerary: items.map((d, i) => ({ ...d, day: i + 1 })),
+    }));
   };
 
   return (
@@ -560,6 +603,67 @@ export function DealsManager() {
                 {routeMessage && <p className={`mt-2 text-xs ${routeMessage.includes('ready') ? 'text-emerald-700' : 'text-amber-700'}`} role="status">{routeMessage}</p>}
                 {!geoapifyKey && <p className="mt-2 text-xs text-amber-700">Geoapify features are disabled because VITE_GEOAPIFY_API_KEY is missing. You can still add manual markers and save them.</p>}
               </div>
+              {/* Itinerary / Timeline Editor */}
+              <div className="col-span-1 sm:col-span-2 border-t pt-4">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Tour Itinerary
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Add a day-by-day schedule. This appears as an animated timeline on the deal page.
+                    </p>
+                  </div>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {formData.itinerary.length} day{formData.itinerary.length === 1 ? '' : 's'}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {formData.itinerary.map((day, index) => (
+                    <div
+                      key={index}
+                      className="rounded-lg border p-3 bg-muted/30"
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/70 text-xs font-bold text-white">
+                          {day.day}
+                        </span>
+                        <span className="text-sm font-medium">Day {day.day}</span>
+                        <div className="ml-auto flex items-center gap-1">
+                          <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveItineraryDay(index, -1)} disabled={index === 0}>
+                            <ChevronUp className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveItineraryDay(index, 1)} disabled={index === formData.itinerary.length - 1}>
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => removeItineraryDay(index)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      <Input
+                        value={day.title}
+                        onChange={(e) => updateItineraryDay(index, 'title', e.target.value)}
+                        placeholder="Day title (e.g. Arrival in Dhaka)"
+                        className="mb-2"
+                      />
+                      <Textarea
+                        value={day.description}
+                        onChange={(e) => updateItineraryDay(index, 'description', e.target.value)}
+                        placeholder="What happens this day..."
+                        rows={2}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <Button type="button" variant="outline" size="sm" className="mt-3" onClick={addItineraryDay}>
+                  <Plus className="h-4 w-4 mr-1.5" />Add Day
+                </Button>
+              </div>
+
               <div className="col-span-1 sm:col-span-2"><label className="flex items-center gap-2"><input type="checkbox" checked={formData.is_featured} onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })} className="rounded" /><span>Featured Deal</span></label></div>
             </div>
             <DialogFooter><Button variant="outline" onClick={closeModal}>Cancel</Button><Button onClick={isEditModalOpen ? handleEdit : handleCreate} disabled={isSubmitting}>{isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}{isEditModalOpen ? 'Update Deal' : 'Create Deal'}</Button></DialogFooter>
