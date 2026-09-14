@@ -295,7 +295,7 @@ export default function HowItWorks({
   return (
     <LazyMotion features={domAnimation}>
       <div
-        className={`bg-background max-md:pt-10 max-md:pb-20 md:py-16 px-4 sm:px-8 relative ${className ?? ""}`}
+        className={`bg-background max-md:pt-10 max-md:pb-20 md:py-16 px-4 sm:px-8 relative overflow-hidden ${className ?? ""}`}
       >
         {/* Notebook grid backdrop */}
         <div
@@ -328,7 +328,7 @@ export default function HowItWorks({
                 linking the centered pins, visible in the gaps between cards. */}
             {data.length > 1 && anchors.length >= 2 && (
               <svg
-                className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 overflow-visible"
+                className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 overflow-hidden"
                 width={size.width}
                 height={size.height}
                 viewBox={`0 0 ${Math.max(size.width, 1)} ${Math.max(size.height, 1)}`}

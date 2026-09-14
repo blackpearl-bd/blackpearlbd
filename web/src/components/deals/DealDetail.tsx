@@ -30,13 +30,13 @@ export function DealDetail({ deal }: DealDetailProps) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div>
       {/* Image Gallery */}
       <div className="mb-8">
         <img
           src={deal.image_url || '/placeholder-deal.jpg'}
           alt={deal.title}
-          className="w-full h-96 object-cover rounded-lg"
+          className="w-full h-56 sm:h-72 md:h-96 object-cover rounded-lg"
         />
         {deal.gallery && deal.gallery.length > 0 && (
           <div className="flex gap-2 mt-4 overflow-x-auto">
@@ -91,7 +91,7 @@ export function DealDetail({ deal }: DealDetailProps) {
               </span>
             )}
           </div>
-          <div className="flex gap-2 justify-end">
+          <div className="flex flex-wrap gap-2 justify-end">
             <Button variant="outline" onClick={handleShare}>
               <Share2 className="w-4 h-4 mr-2" />
               Share
@@ -150,7 +150,7 @@ export function DealDetail({ deal }: DealDetailProps) {
 
       {/* Timeline Itinerary — pinned-card zigzag (see components/ui/how-it-works.tsx) */}
       {deal.itinerary && deal.itinerary.length > 0 && (
-        <div className="mb-6 rounded-lg border">
+        <div className="mb-6 rounded-lg border overflow-hidden">
           <HowItWorks
             features={deal.itinerary.map(
               (day, index): Step => ({

@@ -157,7 +157,7 @@ export default function Career3({
 
       <div className="mt-10 flex w-full justify-center">
         <div className="no-scrollbar w-full max-w-6xl overflow-x-auto rounded-full border border-border bg-muted p-1">
-          <div className="flex min-w-max items-center justify-center gap-1 md:min-w-full">
+          <div className="flex min-w-max items-center justify-start gap-1 md:justify-center md:min-w-full">
             {departments.map((dept) => (
               <button
                 key={dept}
