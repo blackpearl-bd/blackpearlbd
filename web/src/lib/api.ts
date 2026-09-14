@@ -74,6 +74,11 @@ export const api = {
     fetchApi<{ deal: TourDeal }>(`/deals/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   deleteDeal: (id: string) =>
     fetchApi(`/deals/${id}`, { method: 'DELETE' }),
+  bulkRemoveDeals: (ids: string[]) =>
+    fetchApi<{ removed: number; failed: number; results: Array<{ id: string; status: string; images?: number; message?: string }> }>(
+      '/deals/bulk-remove',
+      { method: 'POST', body: JSON.stringify({ ids }) },
+    ),
 
   // Custom Packages
   getDestinations: () => fetchApi<{ destinations: Destination[] }>('/custom-packages/destinations'),

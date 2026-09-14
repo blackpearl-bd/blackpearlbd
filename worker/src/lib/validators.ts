@@ -108,3 +108,7 @@ export const UpdatePackageDestinationSchema = z.object({
   sort_order: z.number().int().min(0).optional(),
   is_active: z.boolean().optional(),
 });
+
+export const BulkRemoveDealsSchema = z.object({
+  ids: z.array(z.string().uuid()).min(1).max(100),
+});

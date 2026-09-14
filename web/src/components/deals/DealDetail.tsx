@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSavedDeals } from '@/hooks/useDeals';
 import { BookingModal } from '@/components/bookings/BookingModal';
 import { DealRouteMap, isValidWaypoint } from '@/components/deals/DealRouteMap';
-import { DealTimeline } from '@/components/deals/DealTimeline';
+import HowItWorks, { type Step } from '@/components/ui/how-it-works';
 import type { TourDeal } from '@/types';
 
 interface DealDetailProps {
@@ -148,16 +148,19 @@ export function DealDetail({ deal }: DealDetailProps) {
         </Card>
       )}
 
-      {/* Timeline Itinerary */}
+      {/* Timeline Itinerary — pinned-card zigzag (see components/ui/how-it-works.tsx) */}
       {deal.itinerary && deal.itinerary.length > 0 && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Tour Itinerary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DealTimeline itinerary={deal.itinerary} />
-          </CardContent>
-        </Card>
+        <div className="mb-6 rounded-lg border">
+          <HowItWorks
+            features={deal.itinerary.map(
+              (day, index): Step => ({
+                title: day.title || `Day ${day.day}`,
+                description: day.description,
+                colorTheme: (['orange', 'blue', 'purple'] as const)[index % 3],
+              }),
+            )}
+          />
+        </div>
       )}
 
       {/* Inclusions & Exclusions */}

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,6 +78,8 @@ export function DealsManager() {
   const [selectedDeal, setSelectedDeal] = useState<TourDeal | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<DealFormData>(emptyForm);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkRemoving, setIsBulkRemoving] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<GeoapifyResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -328,6 +330,62 @@ export function DealsManager() {
     }
   };
 
+  const toggleSelected = (id: string) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllSelected = () => {
+    setSelectedIds((current) => {
+      if (current.size === deals.length && deals.length > 0) return new Set();
+      return new Set(deals.map((deal) => deal.id));
+    });
+  };
+
+  // Prune selection when the deals list changes (e.g. after delete/refetch)
+  useEffect(() => {
+    setSelectedIds((current) => {
+      if (current.size === 0) return current;
+      const live = new Set(deals.map((deal) => deal.id));
+      const pruned = new Set(Array.from(current).filter((id) => live.has(id)));
+      return pruned.size === current.size ? current : pruned;
+    });
+  }, [deals]);
+
+  const handleBulkRemove = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    const word = ids.length === 1 ? 'deal' : 'deals';
+    if (!confirm(`Permanently remove ${ids.length} ${word} and their uploaded images? This cannot be undone.`)) return;
+    setIsBulkRemoving(true);
+    try {
+      const { removed, failed, results } = await api.bulkRemoveDeals(ids);
+      const skipped = results.filter((r) => r.status === 'skipped_has_bookings').length;
+      if (failed === 0) {
+        toast.success(`${removed} ${word} removed with their images`);
+      } else if (removed === 0) {
+        if (skipped > 0 && skipped === results.length) {
+          toast.error('None removed — selected deals still have bookings');
+        } else {
+          toast.error('Remove failed');
+        }
+      } else {
+        toast(`${removed} removed, ${failed} not (check console for details)`, { icon: '⚠️' });
+        console.warn('Bulk remove partial results:', results);
+      }
+      setSelectedIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+    } catch (error: any) {
+      toast.error(error?.message || 'Bulk remove failed');
+    } finally {
+      setIsBulkRemoving(false);
+    }
+  };
+
   const resetRouteUi = () => {
     setSearchText('');
     setSearchResults([]);
@@ -457,8 +515,35 @@ export function DealsManager() {
       <CardContent>
         {isLoading ? <div className="text-center py-12 text-muted-foreground">Loading...</div> : (
           <div className="overflow-x-auto">
+            {selectedIds.size > 0 && (
+              <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
+                <span className="text-sm font-medium">{selectedIds.size} selected</span>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleBulkRemove}
+                  disabled={isBulkRemoving}
+                >
+                  {isBulkRemoving ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Trash2 className="h-4 w-4 mr-1.5" />}
+                  {isBulkRemoving ? 'Removing…' : 'Remove selected & images'}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())} disabled={isBulkRemoving}>
+                  Clear
+                </Button>
+              </div>
+            )}
             <table className="w-full">
               <thead><tr className="border-b border-border">
+                <th className="w-9 py-3 px-2 text-left">
+                  <input
+                    type="checkbox"
+                    className="rounded align-middle"
+                    aria-label="Select all deals"
+                    checked={deals.length > 0 && selectedIds.size === deals.length}
+                    onChange={toggleAllSelected}
+                    disabled={deals.length === 0}
+                  />
+                </th>
                 <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Title</th>
                 <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Deal ID</th>
                 <th className="text-left py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Destination</th>
@@ -467,7 +552,16 @@ export function DealsManager() {
                 <th className="text-right py-3 px-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">Actions</th>
               </tr></thead>
               <tbody>{deals.map((deal) => (
-                <tr key={deal.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
+                <tr key={deal.id} className={`border-b border-border last:border-0 hover:bg-muted/50 transition-colors ${selectedIds.has(deal.id) ? 'bg-muted/40' : ''}`}>
+                  <td className="py-3 px-2">
+                    <input
+                      type="checkbox"
+                      className="rounded align-middle"
+                      aria-label={`Select ${deal.title}`}
+                      checked={selectedIds.has(deal.id)}
+                      onChange={() => toggleSelected(deal.id)}
+                    />
+                  </td>
                   <td className="py-3 px-3"><div className="min-w-0"><p className="text-sm font-medium text-foreground truncate">{deal.title}</p><p className="text-xs text-muted-foreground truncate sm:hidden">{deal.destination}</p>{deal.is_featured && <span className="inline-block mt-1 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">Featured</span>}</div></td>
                   <td className="py-3 px-3 text-sm text-muted-foreground font-mono hidden lg:table-cell">{deal.deal_code || '—'}</td>
                   <td className="py-3 px-3 text-sm text-muted-foreground hidden sm:table-cell">{deal.destination}</td>

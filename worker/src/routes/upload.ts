@@ -56,13 +56,26 @@ upload.post('/image', authMiddleware, adminMiddleware, async (c) => {
     return c.json({ url: publicUrl, key });
   }
 
-
+  return c.json({ error: 'Unsupported content type. Use multipart/form-data.' }, 400);
 });
 
 // Serve image from R2 (public)
-upload.get('/image/:key+', async (c) => {
+// NOTE: Hono does NOT support Express-style multi-segment params like "/:key+";
+// that pattern only ever matched a single segment, so nested keys such as
+// "deals/1694…-abc123.webp" returned 404. Use a wildcard and parse the key
+// from the request path instead.
+function imageKeyFromPath(path: string): string {
+  const match = path.match(/^\/upload\/image\/(.+)$/);
+  return match ? decodeURIComponent(match[1]) : '';
+}
+
+upload.get('/image/*', async (c) => {
   const env = c.env as Env;
-  const key = c.req.param('key') as string;
+  const key = imageKeyFromPath(new URL(c.req.url).pathname);
+
+  if (!key) {
+    return c.json({ error: 'Image key required' }, 400);
+  }
 
   if (!env.BLACKPEARL_BUCKET) {
     return c.json({ error: 'Storage not configured' }, 500);
@@ -83,9 +96,13 @@ upload.get('/image/:key+', async (c) => {
 });
 
 // Delete image from R2 (admin only)
-upload.delete('/image/:key+', authMiddleware, adminMiddleware, async (c) => {
+upload.delete('/image/*', authMiddleware, adminMiddleware, async (c) => {
   const env = c.env as Env;
-  const key = c.req.param('key') as string;
+  const key = imageKeyFromPath(new URL(c.req.url).pathname);
+
+  if (!key) {
+    return c.json({ error: 'Image key required' }, 400);
+  }
 
   if (!env.BLACKPEARL_BUCKET) {
     return c.json({ error: 'Storage not configured' }, 500);

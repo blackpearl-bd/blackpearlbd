@@ -2,6 +2,14 @@ name = "blackpearl-api"
 main = "src/index.ts"
 compatibility_date = "2024-01-01"
 
+# R2 bucket for file storage (deal images, etc.)
+# Declared at the TOP LEVEL so it applies to the default environment.
+# NOTE: `npx wrangler deploy` (no --env) and the GitHub Actions workflow both
+# deploy the DEFAULT environment — bindings under [env.production] are ignored
+# there, which previously caused "Storage not configured" (500) on upload.
+# When deploying with `--env production`, uncomment the [env.production] block.
+r2_buckets = [{ binding = "BLACKPEARL_BUCKET", bucket_name = "blackpearl-assets" }]
+
 # ── Production environment ──────────────────────────────────────────────────
 # Reproducible deploy target. Secrets are stored in the Cloudflare dashboard
 # (via `wrangler secret put`) — the values below are NOT the real secrets.
@@ -11,14 +19,13 @@ compatibility_date = "2024-01-01"
 #   echo "<SUPABASE_ANON_KEY>" | npx wrangler secret put SUPABASE_ANON_KEY --env production
 #   echo "<SERVICE_ROLE_KEY>"  | npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env production
 
-[env.production]
-name = "blackpearl-api"
-main = "src/index.ts"
-compatibility_date = "2024-01-01"
+# [env.production] inherits top-level bindings (r2_buckets above). Uncomment
+# and customize only if production needs different bindings/settings.
+# [env.production]
+# name = "blackpearl-api"
+# main = "src/index.ts"
+# compatibility_date = "2024-01-01"
 
 # Plain-text env vars for production (non-secret config only).
 # Secrets (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY) are
 # uploaded separately via `wrangler secret put` and never stored in this file.
-
-# R2 bucket for file storage (deal images, etc.)
-r2_buckets = [{ binding = "BLACKPEARL_BUCKET", bucket_name = "blackpearl-assets" }]

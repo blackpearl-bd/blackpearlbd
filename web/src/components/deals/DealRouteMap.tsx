@@ -71,7 +71,16 @@ function MapBounds({ waypoints, geometry }: { waypoints: Waypoint[]; geometry?: 
       if (points.length > 1) map.fitBounds(L.latLngBounds(points), { padding: [28, 28] });
     };
     const frame = requestAnimationFrame(resizeAndFit);
-    return () => cancelAnimationFrame(frame);
+    // The map often mounts inside an animating/scrollable dialog; Leaflet measures
+    // its container once at init and renders blank if the size changes afterwards.
+    // Re-measuring on container resize keeps the tiles visible in that case.
+    const container = map.getContainer();
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(container);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
   }, [geometry, geometryPoints.length, map, waypoints]);
 
   return null;
