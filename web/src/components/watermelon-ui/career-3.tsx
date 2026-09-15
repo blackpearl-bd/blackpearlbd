@@ -1,14 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  MapPin,
-  ArrowRight,
-  ExternalLink,
-  Compass,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { AnimatedBookmarkButton } from "@/components/deals/AnimatedBookmarkButton";
+import { DealCard } from "@/components/deals/DealCard";
 import { useBookmarkStore } from "@/stores/bookmarkStore";
+import type { TourDeal } from "@/types";
 
 export type Department = string;
 
@@ -22,7 +19,18 @@ export interface JobListing {
   department: Department;
   href?: string;
   tags?: string[];
-  deal?: any; // TourDeal object for bookmarking
+  /** The full deal — the card renders itself straight from this. */
+  deal: TourDeal;
+}
+
+/** A single experience-category chip, alongside the destination tabs. */
+export interface CategoryFilter {
+  key: string;
+  label: string;
+  emoji: string;
+  count: number;
+  /** Tailwind classes for the chip when it is the active filter. */
+  className?: string;
 }
 
 export interface Career3Props {
@@ -36,6 +44,16 @@ export interface Career3Props {
   emptyMessage?: string;
   /** Department tab to pre-select on mount (e.g. from a ?destination= URL param) */
   defaultDepartment?: Department;
+  /** Optional experience-category chips rendered under the destination tabs */
+  categories?: CategoryFilter[];
+  /** Currently active category key, or "all" */
+  activeCategory?: string;
+  onCategoryChange?: (key: string) => void;
+  /**
+   * Notified with the effective department tab (on mount and on every change),
+   * so a parent can scope sibling filters to the tab that is actually showing.
+   */
+  onDepartmentChange?: (department: Department) => void;
 }
 
 interface JobCardProps {
@@ -44,78 +62,19 @@ interface JobCardProps {
 
 function JobCard({ job }: JobCardProps) {
   const { addBookmark, removeBookmark, isBookmarked } = useBookmarkStore();
-  
-  const handleBookmarkToggle = () => {
-    if (isBookmarked(job.id)) {
-      removeBookmark(job.id);
-    } else if (job.deal) {
-      addBookmark(job.deal);
-    }
-  };
+  const bookmarked = isBookmarked(job.id);
 
   return (
-    <div className="group bg-card text-card-foreground flex flex-col overflow-hidden rounded-lg border shadow-sm transition-all duration-300">
-      <div className="bg-muted flex flex-1 flex-col gap-4 rounded-lg px-5 pt-4 pb-5 shadow-sm duration-300">
-        <div className="flex items-center justify-between">
-          <span className="rounded-full border border-border bg-background px-3 py-0.5 text-xs font-medium text-muted-foreground">
-            {job.type}
-          </span>
-          <div className="flex items-center gap-2">
-            <AnimatedBookmarkButton
-              isBookmarked={isBookmarked(job.id)}
-              onClick={handleBookmarkToggle}
-            />
-            <span className="text-muted-foreground transition-colors duration-200 group-hover:text-foreground">
-              <ExternalLink className="h-3 w-3" />
-            </span>
-          </div>
-        </div>
-
-        <div className="flex flex-1 items-center gap-1.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-            <Compass className="h-4 w-4" />
-          </span>
-          <div>
-            <h3 className="text-xl leading-snug font-semibold">
-              {job.title}
-            </h3>
-          </div>
-        </div>
-
-        <p className="text-sm text-muted-foreground line-clamp-2">
-          {job.description}
-        </p>
-
-        <div className="flex flex-wrap gap-1.5">
-          {job.tags?.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full border border-border bg-background px-3 py-0.5 text-xs font-medium text-muted-foreground"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between px-5 py-3">
-        <div>
-          <p className="text-sm font-bold">
-            {job.salaryRange}
-          </p>
-          <p className="flex items-center gap-1 text-xs text-muted-foreground">
-            <MapPin className="h-3 w-3 shrink-0" />
-            {job.location}
-          </p>
-        </div>
-        <a
-          href={job.href ?? "#"}
-          className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground transition-colors duration-200 hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-        >
-          Details
-        </a>
-      </div>
-    </div>
+    <DealCard
+      deal={job.deal}
+      action={
+        <AnimatedBookmarkButton
+          isBookmarked={bookmarked}
+          onClick={() => (bookmarked ? removeBookmark(job.id) : addBookmark(job.deal))}
+          className="rounded-full bg-white/90 shadow-md backdrop-blur-sm hover:bg-white"
+        />
+      }
+    />
   );
 }
 
@@ -129,10 +88,20 @@ export default function Career3({
   exploreHref = "#",
   emptyMessage = "No tours found in this category right now.",
   defaultDepartment,
+  categories,
+  activeCategory = "all",
+  onCategoryChange,
+  onDepartmentChange,
 }: Career3Props) {
   const [active, setActive] = useState<Department>(defaultDepartment ?? departments[0] ?? "");
 
+  useEffect(() => {
+    onDepartmentChange?.(active);
+  }, [active, onDepartmentChange]);
+
   const filtered = active === "All" ? jobs : jobs.filter((j) => j.department === active);
+
+  const totalInCategories = (categories ?? []).reduce((sum, c) => sum + c.count, 0);
 
   return (
     <section className="mx-auto h-full w-full max-w-7xl px-0 py-16 sm:py-20">
@@ -175,13 +144,51 @@ export default function Career3({
         </div>
       </div>
 
+      {categories && categories.length > 0 && (
+        <div
+          role="group"
+          aria-label="Filter tours by experience"
+          className="no-scrollbar mt-4 flex w-full snap-x items-center gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:justify-center sm:overflow-visible"
+        >
+          {[
+            { key: "all", label: "All experiences", emoji: "✨", count: totalInCategories, className: undefined },
+            ...categories,
+          ].map((category) => {
+            const isActive = activeCategory === category.key;
+            return (
+              <button
+                key={category.key}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => onCategoryChange?.(category.key)}
+                className={`inline-flex shrink-0 snap-start items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none ${
+                  isActive
+                    ? category.className ?? "border-foreground/20 bg-foreground text-background"
+                    : "border-border bg-background text-muted-foreground hover:border-foreground/25 hover:text-foreground"
+                } ${isActive ? "shadow-sm ring-1 ring-current/20" : ""}`}
+              >
+                <span aria-hidden="true">{category.emoji}</span>
+                {category.label}
+                <span
+                  className={`rounded-full px-1.5 text-[10px] font-semibold tabular-nums ${
+                    isActive ? "bg-black/10 dark:bg-white/15" : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {category.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="mt-10">
         {filtered.length === 0 ? (
           <p className="py-16 text-center text-sm text-muted-foreground">
             {emptyMessage}
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((job) => (
               <JobCard key={job.id} job={job} />
             ))}

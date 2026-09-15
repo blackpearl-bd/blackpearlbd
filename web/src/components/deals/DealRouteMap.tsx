@@ -3,7 +3,6 @@ import {
   MapContainer,
   Marker,
   Polyline,
-  Popup,
   TileLayer,
   useMap,
   useMapEvents,
@@ -46,7 +45,62 @@ function validGeometry(geometry?: RouteGeometry | null): LatLngTuple[] {
     .map(([lng, lat]) => [lat, lng] as LatLngTuple);
 }
 
-function numberedIcon(number: number) {
+function polaroidIcon(number: number, name: string, imageUrl?: string) {
+  if (imageUrl) {
+    return L.divIcon({
+      className: 'deal-route-polaroid',
+      html: `
+        <div style="
+          width: 80px;
+          background: white;
+          padding: 6px 6px 20px 6px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.15);
+          transform: rotate(-3deg);
+          border-radius: 2px;
+          position: relative;
+        ">
+          <img 
+            src="${imageUrl}" 
+            alt="${name}"
+            style="width: 68px; height: 52px; object-fit: cover; border-radius: 1px;"
+          />
+          <div style="
+            position: absolute;
+            bottom: 4px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-family: 'Caveat', cursive, sans-serif;
+            font-size: 11px;
+            color: #444;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0 4px;
+          ">${name || `Stop ${number}`}</div>
+          <div style="
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 18px;
+            height: 18px;
+            background: #2563eb;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          ">${number}</div>
+        </div>
+      `,
+      iconSize: [92, 88],
+      iconAnchor: [46, 88],
+      popupAnchor: [0, -72],
+    });
+  }
   return L.divIcon({
     className: 'deal-route-marker',
     html: `<span>${number}</span>`,
@@ -127,9 +181,11 @@ export function DealRouteMap({
         <MapBounds waypoints={safeWaypoints} geometry={geometry} />
         {editable && <ClickHandler onMapClick={onMapClick} />}
         {safeWaypoints.map((point, index) => (
-          <Marker key={`${point.lat}-${point.lng}-${index}`} position={[point.lat, point.lng]} icon={numberedIcon(index + 1)}>
-            <Popup>{point.name || `Stop ${index + 1}`}</Popup>
-          </Marker>
+          <Marker
+            key={`${point.lat}-${point.lng}-${index}`}
+            position={[point.lat, point.lng]}
+            icon={polaroidIcon(index + 1, point.name || `Stop ${index + 1}`, point.image)}
+          />
         ))}
         {safeWaypoints.length > 1 && line.length > 1 && <Polyline positions={line} pathOptions={{ color: '#2563eb', weight: 5, opacity: 0.85 }} />}
       </MapContainer>

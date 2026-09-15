@@ -23,6 +23,20 @@ export function r2KeyFromImageUrl(url: unknown): string | null {
   return key.startsWith(R2_IMAGE_PREFIX) ? key : null;
 }
 
+/**
+ * Public URL for an uploaded object.
+ *
+ * Derived from the request that did the upload rather than a hardcoded
+ * `*.workers.dev` host, so that serving the API from a custom domain mints URLs
+ * on that domain. Hardcoding it meant every new image kept pointing at
+ * workers.dev, which breaks the moment that hostname is disabled.
+ *
+ * URLs already stored in the database are untouched and keep working.
+ */
+export function publicImageUrl(requestUrl: string, key: string): string {
+  return new URL(`/upload/image/${key}`, requestUrl).toString();
+}
+
 /** Collect the unique R2 keys referenced by a deal's image_url + gallery. */
 export function collectR2ImageKeys(imageUrl: unknown, gallery: unknown): string[] {
   const keys: string[] = [];

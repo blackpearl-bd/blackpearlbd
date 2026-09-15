@@ -90,8 +90,6 @@ npm run dev
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 VITE_API_URL=http://localhost:8787
-# Client-side only; restrict this key to your domains in Geoapify if available.
-VITE_GEOAPIFY_API_KEY=your-geoapify-api-key
 ```
 
 #### Worker (.dev.vars)
@@ -99,7 +97,12 @@ VITE_GEOAPIFY_API_KEY=your-geoapify-api-key
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+GEOAPIFY_API_KEY=your-geoapify-api-key
 ```
+
+Place search, routing and reverse geocoding are proxied through the Worker's
+`/geo` routes, so the Geoapify key stays server-side. In production set it with
+`npx wrangler secret put GEOAPIFY_API_KEY` from `worker/`.
 
 ## Deployment
 
@@ -117,6 +120,12 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 cd worker
 npm run deploy
 ```
+
+Optional: serve the API from a custom domain (e.g. `api.blackpearl.bd`) via
+*Workers & Pages → Settings → Domains & Routes*. Besides the tidier URL, this is
+what makes Cloudflare's edge cache functional — the Cache API is a no-op on
+`*.workers.dev`. See `CLOUDFLARE_SETUP.md` for the details and the
+`/geo/cache-stats` probe that confirms it.
 
 ## Features
 

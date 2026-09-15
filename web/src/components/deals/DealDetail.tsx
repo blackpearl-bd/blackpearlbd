@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Heart, Share2, Calendar, Users, MapPin, Hash } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Heart, Share2, Calendar, Users, MapPin, Hash, Route, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useSavedDeals } from '@/hooks/useDeals';
 import { BookingModal } from '@/components/bookings/BookingModal';
 import { DealRouteMap, isValidWaypoint } from '@/components/deals/DealRouteMap';
-import HowItWorks, { type Step } from '@/components/ui/how-it-works';
+import { Timeline, getThemeForDeal } from '@/components/ui/timeline';
 import type { TourDeal } from '@/types';
 
 interface DealDetailProps {
@@ -19,6 +19,7 @@ export function DealDetail({ deal }: DealDetailProps) {
   const { isAuthenticated } = useAuth();
   const { savedDeals } = useSavedDeals();
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [isRouteOpen, setIsRouteOpen] = useState(false);
 
   const isSaved = savedDeals.some((sd) => sd.deal_id === deal.id);
   const savedDeal = savedDeals.find((sd) => sd.deal_id === deal.id);
@@ -28,6 +29,16 @@ export function DealDetail({ deal }: DealDetailProps) {
     navigator.clipboard.writeText(window.location.href);
     alert('Link copied to clipboard!');
   };
+
+  // Escape collapses the floating route panel without touching anything else.
+  useEffect(() => {
+    if (!isRouteOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsRouteOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isRouteOpen]);
 
   return (
     <div>
@@ -126,16 +137,59 @@ export function DealDetail({ deal }: DealDetailProps) {
         </CardContent>
       </Card>
 
-      {/* Stored route — public pages only render the saved geometry; no routing API call. */}
-      {routeWaypoints.length > 0 && (
-        <Card className="mb-6 overflow-hidden">
-          <CardHeader className="pb-4">
-            <CardTitle className="flex items-center gap-2 text-xl"><MapPin className="h-5 w-5 text-secondary" />Tour route</CardTitle>
-            <p className="text-sm text-muted-foreground">Follow the stops in order from start to finish.</p>
-          </CardHeader>
-          <CardContent className="p-0">
-            <DealRouteMap waypoints={routeWaypoints} geometry={deal.route_geometry} className="h-[300px] w-full rounded-none border-0 sm:h-[440px]" />
-            <ol aria-label="Tour route stops" className="grid gap-2 border-t p-4 sm:grid-cols-2">
+      {/*
+        Stored route — public pages only render the saved geometry; no routing API call.
+        It lives behind a floating button: the map expands into a card on click and
+        collapses again from the floating close button.
+      */}
+      {routeWaypoints.length > 0 && !isRouteOpen && (
+        <button
+          type="button"
+          onClick={() => setIsRouteOpen(true)}
+          aria-expanded={false}
+          aria-controls="tour-route-panel"
+          className="fixed bottom-28 right-4 z-40 flex items-center gap-2 rounded-full bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/30 transition-transform hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 md:bottom-6 md:right-6"
+        >
+          <Route className="h-5 w-5" />
+          Tour route
+          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary-foreground/20 px-1 text-xs">
+            {routeWaypoints.length}
+          </span>
+        </button>
+      )}
+
+      {routeWaypoints.length > 0 && isRouteOpen && (
+        <div className="fixed inset-x-4 bottom-28 z-40 animate-in fade-in slide-in-from-bottom-4 duration-200 md:inset-x-auto md:bottom-6 md:right-6 md:w-[42rem]">
+          <button
+            type="button"
+            onClick={() => setIsRouteOpen(false)}
+            aria-label="Close tour route"
+            className="absolute -right-2 -top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background text-foreground shadow-lg transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          <div
+            id="tour-route-panel"
+            className="flex max-h-[min(70vh,34rem)] flex-col overflow-hidden rounded-2xl border border-border bg-background shadow-2xl md:max-h-[min(82vh,44rem)]"
+          >
+            <div className="border-b border-border px-4 py-3">
+              <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
+                <MapPin className="h-4 w-4 shrink-0 text-secondary" />
+                Tour route
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {routeWaypoints.length} stops in order, from start to finish.
+              </p>
+            </div>
+
+            <DealRouteMap
+              waypoints={routeWaypoints}
+              geometry={deal.route_geometry}
+              className="h-[240px] w-full border-0 sm:h-[340px]"
+            />
+
+            <ol aria-label="Tour route stops" className="grid max-h-44 gap-2 overflow-y-auto border-t border-border p-3 sm:grid-cols-2">
               {routeWaypoints.map((waypoint, index) => (
                 <li key={`${waypoint.lat}-${waypoint.lng}-${index}`} className="flex min-h-10 items-center gap-3 rounded-md bg-muted/50 px-3 py-2 text-sm">
                   <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white">{index + 1}</span>
@@ -143,20 +197,41 @@ export function DealDetail({ deal }: DealDetailProps) {
                 </li>
               ))}
             </ol>
-            {routeWaypoints.length === 1 && <p className="px-4 pb-4 text-xs text-muted-foreground">This tour has one marked stop; no driving route is shown.</p>}
-          </CardContent>
-        </Card>
+            {routeWaypoints.length === 1 && (
+              <p className="px-4 pb-3 text-xs text-muted-foreground">This tour has one marked stop; no driving route is shown.</p>
+            )}
+          </div>
+        </div>
       )}
 
-      {/* Timeline Itinerary — pinned-card zigzag (see components/ui/how-it-works.tsx) */}
+      {/* Timeline Itinerary */}
       {deal.itinerary && deal.itinerary.length > 0 && (
-        <div className="mb-6 rounded-lg border overflow-hidden">
-          <HowItWorks
-            features={deal.itinerary.map(
-              (day, index): Step => ({
-                title: day.title || `Day ${day.day}`,
-                description: day.description,
-                colorTheme: (['orange', 'blue', 'purple'] as const)[index % 3],
+        <div className="mb-6">
+          <Timeline
+            theme={getThemeForDeal(deal.title, deal.destination)}
+            data={deal.itinerary.map(
+              (phase) => ({
+                title: phase.title || `Phase ${phase.phase}`,
+                content: (
+                  <div className="mb-8">
+                    <p className="text-neutral-800 dark:text-neutral-200 text-xs md:text-sm font-normal mb-4 whitespace-pre-wrap">
+                      {phase.description}
+                    </p>
+                    {/* Phase-specific photos */}
+                    {phase.photos && phase.photos.length > 0 && (
+                      <div className="grid grid-cols-2 gap-4">
+                        {phase.photos.slice(0, 4).map((img, imgIdx) => (
+                          <img
+                            key={imgIdx}
+                            src={img}
+                            alt={`${phase.title || `Phase ${phase.phase}`} photo ${imgIdx + 1}`}
+                            className="rounded-lg object-cover h-20 md:h-44 lg:h-60 w-full shadow-[0_0_24px_rgba(34,_42,_53,_0.06),_0_1px_1px_rgba(0,_0,_0,_0.05),_0_0_0_1px_rgba(34,_42,_53,_0.04),_0_0_4px_rgba(34,_42,_53,_0.08),_0_16px_68px_rgba(47,_48,_55,_0.05),_0_1px_0_rgba(255,_255,_255,_0.1)_inset]"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ),
               }),
             )}
           />

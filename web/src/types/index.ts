@@ -16,12 +16,33 @@ export interface Waypoint {
   name: string;
   lat: number;
   lng: number;
+  image?: string;
 }
 
-/** GeoJSON LineString returned by Geoapify's routing endpoint. */
+/** GeoJSON LineString describing a driving route between waypoints. */
 export interface RouteGeometry {
   type: 'LineString';
   coordinates: [number, number][];
+}
+
+/**
+ * A geocoding hit from the Worker's `/geo` proxy. The Worker flattens the
+ * provider's payload into this shape, so nothing here is provider-specific.
+ */
+export interface GeoPlace {
+  id: string | null;
+  name: string;
+  /** Full formatted address, e.g. "Cox's Bazar District, Chattogram Division, Bangladesh". */
+  address: string;
+  lat: number;
+  lon: number;
+}
+
+/** Result of `/geo/route`: the polyline plus Geoapify's distance (m) and time (s). */
+export interface GeoRoute {
+  geometry: RouteGeometry | null;
+  distance: number;
+  time: number;
 }
 
 export interface TourDeal {
@@ -32,6 +53,8 @@ export interface TourDeal {
   description: string | null;
   short_description: string | null;
   destination: string;
+  /** Deal card category key ('beach', 'nature', ...); null = auto-detect. */
+  category: string | null;
   price: number;
   original_price: number | null;
   duration_days: number;
@@ -40,7 +63,7 @@ export interface TourDeal {
   gallery: string[];
   inclusions: string[];
   exclusions: string[];
-  itinerary: ItineraryDay[];
+  itinerary: ItineraryPhase[];
   route_waypoints: Waypoint[] | null;
   route_geometry: RouteGeometry | null;
   is_active: boolean;
@@ -50,10 +73,16 @@ export interface TourDeal {
   updated_at: string;
 }
 
-export interface ItineraryDay {
-  day: number;
+/**
+ * One step of a tour itinerary. Deliberately not a calendar day: a one-day tour
+ * can have several phases (pickup, harbour cruise, sunset dinner, ...).
+ * `phase` is the 1-based position of the step within the tour.
+ */
+export interface ItineraryPhase {
+  phase: number;
   title: string;
   description: string;
+  photos: string[];
 }
 
 export interface CustomPackage {

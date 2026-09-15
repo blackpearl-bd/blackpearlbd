@@ -18,6 +18,11 @@ r2_buckets = [{ binding = "BLACKPEARL_BUCKET", bucket_name = "blackpearl-assets"
 #   echo "<SUPABASE_URL>"     | npx wrangler secret put SUPABASE_URL --env production
 #   echo "<SUPABASE_ANON_KEY>" | npx wrangler secret put SUPABASE_ANON_KEY --env production
 #   echo "<SERVICE_ROLE_KEY>"  | npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env production
+#   echo "<GEOAPIFY_KEY>"     | npx wrangler secret put GEOAPIFY_API_KEY --env production
+#
+# GEOAPIFY_API_KEY powers the /geo routes (place search, routing, reverse
+# geocoding). It used to be a VITE_ variable shipped to every browser; keeping it
+# here means the key is never exposed in the frontend bundle.
 
 # [env.production] inherits top-level bindings (r2_buckets above). Uncomment
 # and customize only if production needs different bindings/settings.
@@ -29,3 +34,22 @@ r2_buckets = [{ binding = "BLACKPEARL_BUCKET", bucket_name = "blackpearl-assets"
 # Plain-text env vars for production (non-secret config only).
 # Secrets (SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY) are
 # uploaded separately via `wrangler secret put` and never stored in this file.
+
+# ── Custom domain (optional, but required for the edge cache) ────────────────
+# Cloudflare's Cache API does nothing on *.workers.dev — documented, and silent:
+# put/match "succeed" while caching nothing. The /geo read-through cache has an
+# isolate-memory layer that works regardless, but the shared edge layer needs the
+# Worker served from a real domain on your zone. Run the probe afterwards:
+#   curl https://api.blackpearl.bd/geo/cache-stats   # edge.probe should read "working"
+#
+# Attaching a Custom Domain creates a DNS record, so it needs Zone:DNS:Edit as
+# well as Workers Routes:Edit. The cached `wrangler login` token only has
+# `zone (read)`, which is why this is left commented out — an unauthorised route
+# would fail the whole deploy rather than just the domain attach. Either:
+#   a) add it once in the dashboard (Workers & Pages → blackpearl-api →
+#      Settings → Domains & Routes → Add → Custom Domain), which needs no CLI
+#      scopes and survives subsequent deploys; or
+#   b) run `npx wrangler login` again to grant DNS edit, then uncomment below.
+#
+# After either, set the Pages build variable VITE_API_URL to the new host.
+# routes = [{ pattern = "api.blackpearl.bd", custom_domain = true }]

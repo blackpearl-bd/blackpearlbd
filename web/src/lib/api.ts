@@ -1,4 +1,21 @@
+import { normalizeDeal } from './itinerary';
+
 const API_URL = import.meta.env.VITE_API_URL;
+
+/**
+ * API failure carrying the HTTP status, for callers that must distinguish
+ * "the request was rejected" (e.g. an unroutable waypoint) from "the service
+ * is unavailable" (misconfiguration, expired session, rate limit).
+ */
+export class ApiError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+  }
+}
 
 async function fetchApi<T>(
   endpoint: string,
@@ -24,7 +41,7 @@ async function fetchApi<T>(
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Request failed' }));
     const details = error.details ? `: ${JSON.stringify(error.details)}` : '';
-    throw new Error(`${error.error || `HTTP ${response.status}`}${details}`);
+    throw new ApiError(`${error.error || `HTTP ${response.status}`}${details}`, response.status);
   }
 
   return response.json();
@@ -66,8 +83,10 @@ export const api = {
   },
 
   // Deals
-  getDeals: () => fetchApi<{ deals: TourDeal[] }>('/deals'),
-  getDeal: (slug: string) => fetchApi<{ deal: TourDeal }>(`/deals/${slug}`),
+  getDeals: () =>
+    fetchApi<{ deals: TourDeal[] }>('/deals').then((res) => ({ deals: res.deals.map(normalizeDeal) })),
+  getDeal: (slug: string) =>
+    fetchApi<{ deal: TourDeal }>(`/deals/${slug}`).then((res) => ({ deal: normalizeDeal(res.deal) })),
   createDeal: (data: Partial<TourDeal>) =>
     fetchApi<{ deal: TourDeal }>('/deals', { method: 'POST', body: JSON.stringify(data) }),
   updateDeal: (id: string, data: Partial<TourDeal>) =>
@@ -79,6 +98,15 @@ export const api = {
       '/deals/bulk-remove',
       { method: 'POST', body: JSON.stringify({ ids }) },
     ),
+
+  // Geo — place search, reverse geocoding and routing, proxied through the
+  // Worker so the Geoapify key never ships to the browser. Admin-only.
+  searchPlaces: (query: string, limit = 5) =>
+    fetchApi<{ places: GeoPlace[] }>(`/geo/search?q=${encodeURIComponent(query)}&limit=${limit}`),
+  reverseGeocode: (lat: number, lon: number) =>
+    fetchApi<{ place: GeoPlace | null }>(`/geo/reverse?lat=${lat}&lon=${lon}`),
+  generateRoute: (waypoints: string, mode = 'drive') =>
+    fetchApi<GeoRoute>(`/geo/route?waypoints=${encodeURIComponent(waypoints)}&mode=${mode}`),
 
   // Custom Packages
   getDestinations: () => fetchApi<{ destinations: Destination[] }>('/custom-packages/destinations'),
@@ -170,4 +198,4 @@ export const api = {
 };
 
 // Import types at the top level for convenience
-import type { Profile, TourDeal, CustomPackage, Booking, SavedDeal, PearlsHistory, Destination, ProfileStats, AdminStats, PackageDestination, PackageDistrict, PackageTourSpot } from '../types';
+import type { Profile, TourDeal, CustomPackage, Booking, SavedDeal, PearlsHistory, Destination, ProfileStats, AdminStats, PackageDestination, PackageDistrict, PackageTourSpot, GeoPlace, GeoRoute } from '../types';

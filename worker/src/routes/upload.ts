@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { authMiddleware } from '../middleware/auth';
 import { adminMiddleware } from '../middleware/admin';
+import { publicImageUrl } from '../lib/r2';
 import { Env } from '../types';
 
 const upload = new Hono();
@@ -50,8 +51,8 @@ upload.post('/image', authMiddleware, adminMiddleware, async (c) => {
       },
     });
 
-    // Return the URL served through this Worker
-    const publicUrl = `https://blackpearl-api.ms-blackpearlbd.workers.dev/upload/image/${key}`;
+    // Return the URL served through this Worker, on the host the admin used.
+    const publicUrl = publicImageUrl(c.req.url, key);
 
     return c.json({ url: publicUrl, key });
   }

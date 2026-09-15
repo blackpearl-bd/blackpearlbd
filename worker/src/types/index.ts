@@ -3,6 +3,11 @@ export interface Env {
   SUPABASE_ANON_KEY: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   BLACKPEARL_BUCKET?: R2Bucket;
+  /**
+   * Geoapify key for place search, routing and reverse geocoding. Optional so
+   * the API still boots without it — the /geo routes report 503 instead.
+   */
+  GEOAPIFY_API_KEY?: string;
 }
 
 export interface Profile {
@@ -26,6 +31,8 @@ export interface TourDeal {
   description: string | null;
   short_description: string | null;
   destination: string;
+  /** Deal card category chip; null until an admin picks one. */
+  category: string | null;
   price: number;
   original_price: number | null;
   duration_days: number;
@@ -34,7 +41,7 @@ export interface TourDeal {
   gallery: string[];
   inclusions: string[];
   exclusions: string[];
-  itinerary: ItineraryDay[];
+  itinerary: ItineraryPhase[];
   is_active: boolean;
   is_featured: boolean;
   created_by: string | null;
@@ -42,10 +49,15 @@ export interface TourDeal {
   updated_at: string;
 }
 
-export interface ItineraryDay {
-  day: number;
+/** One step of a tour itinerary — not necessarily a calendar day. */
+export interface ItineraryPhase {
+  /** 1-based position within the tour. */
+  phase?: number;
+  /** Legacy field name kept for rows written before the day -> phase rename. */
+  day?: number;
   title: string;
   description: string;
+  photos?: string[];
 }
 
 export interface CustomPackage {

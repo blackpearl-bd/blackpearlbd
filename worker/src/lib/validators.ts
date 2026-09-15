@@ -14,6 +14,21 @@ function optionalClean() {
   });
 }
 
+/**
+ * Category chips shown on deal cards. Must stay in sync with the CHECK
+ * constraint in supabase/migrations/011_add_deal_category.sql and with
+ * web/src/lib/deal-category.ts.
+ */
+export const DEAL_CATEGORY_VALUES = [
+  'beach',
+  'nature',
+  'hill',
+  'river',
+  'heritage',
+  'adventure',
+  'tour',
+] as const;
+
 const WaypointSchema = z.object({
   name: z.string().min(1).max(200),
   lat: z.number().finite().min(-90).max(90),
@@ -36,13 +51,21 @@ export const CreateDealSchema = z.object({
   duration_days: z.coerce.number().int().positive(),
   max_travelers: optionalClean().pipe(z.coerce.number().int().positive().optional()),
   image_url: optionalClean().pipe(z.string().url().optional()),
+  // Empty string (the "auto-detect" choice in the admin form) is dropped so it
+  // never reaches the enum or the nullable column.
+  category: optionalClean().pipe(z.enum(DEAL_CATEGORY_VALUES).optional()),
   gallery: z.array(z.string().url()).optional().default([]).transform(v => v && v.length > 0 ? v : undefined),
   inclusions: z.array(z.string()).optional().default([]).transform(v => v && v.length > 0 ? v : undefined),
   exclusions: z.array(z.string()).optional().default([]).transform(v => v && v.length > 0 ? v : undefined),
   itinerary: z.array(z.object({
-    day: z.number(),
+    // `phase` is the current field. `day` is still accepted from older admin
+    // clients and from deals stored before the day -> phase rename.
+    phase: z.coerce.number().positive().optional(),
+    day: z.coerce.number().positive().optional(),
     title: z.string(),
     description: z.string(),
+    // Must stay declared: unlisted keys are stripped before the insert.
+    photos: z.array(z.string()).optional().default([]),
   })).optional(),
   route_waypoints: z.array(WaypointSchema).max(50).nullable().optional(),
   // Generated once in the admin form and persisted for public, routing-free rendering.
@@ -111,4 +134,54 @@ export const UpdatePackageDestinationSchema = z.object({
 
 export const BulkRemoveDealsSchema = z.object({
   ids: z.array(z.string().uuid()).min(1).max(100),
+});
+
+// ── Geo proxy query params ─────────────────────────────────────────────────
+// Query strings arrive as text, so numbers are coerced here rather than at the
+// call site. Bounds keep one request from burning an unbounded amount of the
+// Geoapify quota.
+
+export const GeoSearchQuerySchema = z.object({
+  q: z.string().trim().min(2).max(200),
+  limit: z.coerce.number().int().min(1).max(10).optional().default(5),
+});
+
+export const GeoReverseQuerySchema = z.object({
+  lat: z.coerce.number().finite().min(-90).max(90),
+  lon: z.coerce.number().finite().min(-180).max(180),
+});
+
+/** `waypoints` is `lat,lon|lat,lon|...` — the same form Geoapify expects. */
+export const GeoRouteQuerySchema = z.object({
+  waypoints: z
+    .string()
+    .trim()
+    .min(1)
+    .transform((value, ctx) => {
+      const parts = value.split('|');
+      if (parts.length < 2 || parts.length > 25) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Provide between 2 and 25 waypoints',
+        });
+        return z.NEVER;
+      }
+
+      const points = parts.map((part) => {
+        const [rawLat, rawLon] = part.split(',');
+        const lat = Number(rawLat);
+        const lon = Number(rawLon);
+        if (!Number.isFinite(lat) || !Number.isFinite(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Invalid waypoint: ${part}`,
+          });
+          return z.NEVER;
+        }
+        return { lat, lon };
+      });
+
+      return points as { lat: number; lon: number }[];
+    }),
+  mode: z.enum(['drive', 'truck', 'walk', 'bicycle', 'scooter']).optional().default('drive'),
 });

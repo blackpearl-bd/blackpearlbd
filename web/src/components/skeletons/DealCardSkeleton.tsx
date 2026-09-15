@@ -1,31 +1,28 @@
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent } from '@/components/ui/card';
 
 export function DealCardSkeleton() {
   return (
-    <Card className="overflow-hidden">
-      <Skeleton className="w-full h-48" />
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-center gap-1">
-          <Skeleton className="w-4 h-4 rounded" />
-          <Skeleton className="h-4 w-24" />
+    <div className="flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      {/* Thumbnail */}
+      <Skeleton className="aspect-[16/10] w-full rounded-none" />
+      {/* Body */}
+      <div className="flex flex-1 flex-col gap-2.5 p-4">
+        <div className="flex flex-wrap gap-1.5">
+          <Skeleton className="h-5 w-28 rounded-full" />
+          <Skeleton className="h-5 w-16 rounded-full" />
         </div>
-        <Skeleton className="h-5 w-3/4" />
+        <Skeleton className="h-5 w-4/5" />
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-4 w-2/3" />
-        <div className="flex items-center gap-1">
-          <Skeleton className="w-4 h-4 rounded" />
-          <Skeleton className="h-4 w-16" />
-        </div>
-        <div className="flex items-center justify-between pt-2 border-t">
-          <Skeleton className="h-6 w-24" />
-          <div className="flex gap-2">
-            <Skeleton className="h-9 w-9 rounded-md" />
-            <Skeleton className="h-9 w-20 rounded-md" />
+        <div className="mt-auto flex items-end justify-between gap-3 border-t border-border pt-3">
+          <div className="space-y-1.5">
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-3 w-16" />
           </div>
+          <Skeleton className="h-8 w-24 rounded-xl" />
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -46,7 +43,7 @@ export function DealsPageSkeleton() {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {Array.from({ length: 6 }).map((_, i) => (
           <DealCardSkeleton key={i} />
         ))}

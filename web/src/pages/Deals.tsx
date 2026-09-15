@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import Career3, { type JobListing } from '@/components/watermelon-ui/career-3';
+import Career3, { type CategoryFilter, type JobListing } from '@/components/watermelon-ui/career-3';
 import { useDeals, useSavedDeals } from '@/hooks/useDeals';
 import { useAuth } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { DealsPageSkeleton } from '@/components/skeletons/DealCardSkeleton';
 import { Search } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
+import { DEAL_CATEGORIES, getDealCategory } from '@/lib/deal-category';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
@@ -24,6 +25,12 @@ export default function Deals() {
 
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('newest');
+
+  // Deep link support: /deals?category=beach pre-selects that experience chip
+  const requestedCategory = searchParams.get('category')?.trim().toLowerCase() || '';
+  const [activeCategory, setActiveCategory] = useState(
+    DEAL_CATEGORIES.some((c) => c.key === requestedCategory) ? requestedCategory : 'all'
+  );
 
   // Derive unique destinations as department tabs
   const departments = useMemo(() => {
@@ -63,7 +70,7 @@ export default function Deals() {
   }, [deals]);
 
   // Apply search filter
-  const filteredJobs = useMemo(() => {
+  const searchedJobs = useMemo(() => {
     let result = allJobs;
 
     if (search) {
@@ -76,6 +83,48 @@ export default function Deals() {
           (j.deal?.deal_code && j.deal.deal_code.toLowerCase().includes(q))
       );
     }
+
+    return result;
+  }, [allJobs, search]);
+
+  // The destination tab the grid is currently showing. Career3 owns the tab
+  // state (it also supports ?destination= deep links) and reports it back here
+  // so the experience chips can be scoped to the same slice of the catalogue.
+  const [activeDestination, setActiveDestination] = useState('All');
+
+  // Experience category chips. The set of chips is derived from the deals the
+  // current destination tab can actually show (so a chip never promises results
+  // the tab hides), while the counts also track the search box. The active chip
+  // is always kept visible so it can be switched off even at zero results.
+  const categories: CategoryFilter[] = useMemo(() => {
+    const inScope =
+      activeDestination === 'All'
+        ? searchedJobs
+        : searchedJobs.filter((j) => j.department === activeDestination);
+
+    const counts = new Map<string, number>();
+    inScope.forEach((j) => {
+      const key = getDealCategory(j.deal).key;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    });
+
+    return DEAL_CATEGORIES.filter(
+      (c) => counts.has(c.key) || c.key === activeCategory
+    ).map((c) => ({
+      key: c.key,
+      label: c.label,
+      emoji: c.emoji,
+      className: c.className,
+      count: counts.get(c.key) ?? 0,
+    }));
+  }, [searchedJobs, activeDestination, activeCategory]);
+
+  // Apply the experience filter, then sort
+  const filteredJobs = useMemo(() => {
+    let result =
+      activeCategory === 'all'
+        ? searchedJobs
+        : searchedJobs.filter((j) => getDealCategory(j.deal).key === activeCategory);
 
     // Sort
     switch (sortBy) {
@@ -105,7 +154,14 @@ export default function Deals() {
     }
 
     return result;
-  }, [allJobs, search, sortBy]);
+  }, [searchedJobs, activeCategory, sortBy]);
+
+  const activeCategoryMeta = categories.find((c) => c.key === activeCategory);
+
+  // Hide the chips only when there is genuinely nothing to choose between. A
+  // filter that is still on always keeps the row visible, otherwise narrowing
+  // the destination tab could strand you with an invisible active filter.
+  const showCategories = categories.length > 1 || activeCategory !== 'all';
 
   if (isLoading) {
     return <DealsPageSkeleton />;
@@ -146,9 +202,17 @@ export default function Deals() {
         departments={departments}
         defaultDepartment={hasDestinationTab ? requestedDestination : undefined}
         jobs={filteredJobs}
+        categories={showCategories ? categories : undefined}
+        activeCategory={activeCategory}
+        onCategoryChange={setActiveCategory}
+        onDepartmentChange={setActiveDestination}
         exploreLabel="Build a custom package"
         exploreHref="/build-package"
-        emptyMessage="No tours found matching your search. Try a different keyword."
+        emptyMessage={
+          activeCategoryMeta
+            ? `No ${activeCategoryMeta.label} tours match your filters yet. Try another experience or destination.`
+            : 'No tours found matching your search. Try a different keyword.'
+        }
       />
     </div>
   );
