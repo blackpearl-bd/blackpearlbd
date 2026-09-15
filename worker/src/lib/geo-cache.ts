@@ -36,7 +36,20 @@ interface CounterSet {
 }
 
 const counters = new Map<GeoCacheNamespace, CounterSet>();
-const startedAt = Date.now();
+
+/**
+ * Start of this isolate's geo activity.
+ *
+ * Deliberately NOT `Date.now()` at module scope: Workers freezes it during
+ * module evaluation and returns 0 until the first I/O, which reported a
+ * 56-year uptime in production. Claiming a start time from inside a request is
+ * accurate and costs nothing.
+ */
+let isolateStartedAt: number | null = null;
+
+function markIsolateStart() {
+  if (isolateStartedAt === null) isolateStartedAt = Date.now();
+}
 
 /** Maintenance activity, surfaced by /geo/cache-stats. */
 const maintenance = {
@@ -136,6 +149,7 @@ export async function readThroughCache<T>(
   produce: () => Promise<T>,
   options: { refresh?: boolean } = {},
 ): Promise<{ value: T; source: GeoCacheSource }> {
+  markIsolateStart();
   const counter = counterFor(namespace);
   counter.requests += 1;
 
@@ -229,29 +243,82 @@ export async function purgeGeoCache(): Promise<GeoCachePurgeResult> {
   };
 }
 
-/**
- * Whether Cloudflare's edge cache actually stores and returns a value for this
- * Worker. The Cache API is a documented no-op on `*.workers.dev`, and worse, a
- * silent one — a put/match pair "succeeds" while caching nothing. The only
- * trustworthy answer is a round trip, which is what this probe does.
- */
-async function probeEdgeCache(originUrl: string): Promise<'working' | 'not-storing' | 'unavailable'> {
+const PROBE_TTL_SECONDS = 60;
+let probeRuns = 0;
+
+interface EdgeProbe {
+  /**
+   * A canary written by an *earlier request* was readable here. This is the only
+   * trustworthy signal: a put+match inside one request proves nothing, because
+   * the cache can serve a same-request write from a local buffer even when
+   * nothing is persisted. A probe that only checks within one request reports a
+   * healthy cache on a host where caching does nothing — which is exactly the
+   * false positive this probe used to produce.
+   */
+  persistedAcrossRequests: boolean;
+  /** The write was accepted and readable immediately (necessary, not sufficient). */
+  writableInRequest: boolean;
+  canaryWrittenAt: string | null;
+  canaryAgeSeconds: number | null;
+  verdict: 'active' | 'not-persisting' | 'unavailable' | 'unknown-first-probe';
+}
+
+async function probeEdgeCache(originUrl: string): Promise<EdgeProbe> {
+  const firstProbe = probeRuns === 0;
+  probeRuns += 1;
+
   const cache = edgeCache();
-  if (!cache) return 'unavailable';
+  if (!cache) {
+    return {
+      persistedAcrossRequests: false,
+      writableInRequest: false,
+      canaryWrittenAt: null,
+      canaryAgeSeconds: null,
+      verdict: 'unavailable',
+    };
+  }
 
   const key = new Request(new URL('/__geo-cache/__probe', originUrl).toString(), { method: 'GET' });
+  let previous: { writtenAt?: string } | null = null;
+
+  try {
+    const hit = await cache.match(key);
+    if (hit) previous = (await hit.json()) as { writtenAt?: string };
+  } catch (error) {
+    console.warn('Geo edge cache probe read failed:', error);
+  }
+
+  // Leave a canary for whichever request comes next, wherever it lands.
+  const writtenAt = new Date().toISOString();
+  let writableInRequest = false;
   try {
     await cache.put(
       key,
-      new Response(JSON.stringify({ probedAt: Date.now() }), {
-        headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=60' },
+      new Response(JSON.stringify({ token: crypto.randomUUID(), writtenAt }), {
+        headers: { 'content-type': 'application/json', 'cache-control': `public, max-age=${PROBE_TTL_SECONDS}` },
       }),
     );
-    return (await cache.match(key)) ? 'working' : 'not-storing';
+    writableInRequest = (await cache.match(key)) !== undefined;
   } catch (error) {
-    console.warn('Geo edge cache probe failed:', error);
-    return 'not-storing';
+    console.warn('Geo edge cache probe write failed:', error);
   }
+
+  const canaryWrittenAt = previous?.writtenAt ?? null;
+  const persisted = canaryWrittenAt !== null;
+
+  return {
+    persistedAcrossRequests: persisted,
+    writableInRequest,
+    canaryWrittenAt,
+    canaryAgeSeconds: canaryWrittenAt
+      ? Math.max(0, Math.round((Date.now() - Date.parse(canaryWrittenAt)) / 1000))
+      : null,
+    verdict: persisted
+      ? 'active'
+      : firstProbe
+        ? 'unknown-first-probe'
+        : 'not-persisting',
+  };
 }
 
 export interface GeoCacheStatsSnapshot {
@@ -259,8 +326,8 @@ export interface GeoCacheStatsSnapshot {
   /** True when the request was served from a domain other than *.workers.dev. */
   customDomain: boolean;
   uptimeSeconds: number;
-  isolate: { entries: number; limit: number };
-  edge: { capable: boolean; probe: string };
+  isolate: { entries: number; limit: number; startedAt: string | null };
+  edge: EdgeProbe & { capable: boolean };
   totals: CounterSet & { savedUpstreamCalls: number };
   byNamespace: Record<string, CounterSet>;
   maintenance: { refreshes: number; purges: number; lastPurgeAt: string | null; lastPurgedKeys: number };
@@ -272,6 +339,7 @@ export interface GeoCacheStatsSnapshot {
  * it as a live sample, not a fleet-wide total.
  */
 export async function geoCacheStats(requestUrl: string): Promise<GeoCacheStatsSnapshot> {
+  markIsolateStart();
   const { hostname } = new URL(requestUrl);
 
   const totals: CounterSet = { requests: 0, isolateHits: 0, edgeHits: 0, misses: 0 };
@@ -288,13 +356,17 @@ export async function geoCacheStats(requestUrl: string): Promise<GeoCacheStatsSn
   return {
     hostname,
     customDomain: !hostname.endsWith('.workers.dev'),
-    uptimeSeconds: Math.round((Date.now() - startedAt) / 1000),
-    isolate: { entries: memo.size, limit: MEMO_LIMIT },
-    edge: { capable: edgeCache() !== null, probe: await probeEdgeCache(requestUrl) },
+    uptimeSeconds: isolateStartedAt === null ? 0 : Math.round((Date.now() - isolateStartedAt) / 1000),
+    isolate: {
+      entries: memo.size,
+      limit: MEMO_LIMIT,
+      startedAt: isolateStartedAt === null ? null : new Date(isolateStartedAt).toISOString(),
+    },
+    edge: { capable: edgeCache() !== null, ...(await probeEdgeCache(requestUrl)) },
     totals: { ...totals, savedUpstreamCalls: totals.isolateHits + totals.edgeHits },
     byNamespace,
     maintenance: { ...maintenance },
     note:
-      'Per-isolate counters: isolates are short-lived and there are many, so short-lived ad-hoc reads are expected to show small numbers. The edge probe is the authoritative check that the Cloudflare cache is active.',
+      'Counters describe the isolate that answered, not the fleet. For the edge cache, trust edge.verdict: it is only "active" when a canary written by an earlier request was read back, since a same-request put/match succeeds even where caching does nothing.',
   };
 }
