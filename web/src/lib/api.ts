@@ -101,12 +101,18 @@ export const api = {
 
   // Geo — place search, reverse geocoding and routing, proxied through the
   // Worker so the Geoapify key never ships to the browser. Admin-only.
-  searchPlaces: (query: string, limit = 5) =>
-    fetchApi<{ places: GeoPlace[] }>(`/geo/search?q=${encodeURIComponent(query)}&limit=${limit}`),
-  reverseGeocode: (lat: number, lon: number) =>
-    fetchApi<{ place: GeoPlace | null }>(`/geo/reverse?lat=${lat}&lon=${lon}`),
+  // `refresh` forces a fresh upstream lookup instead of a cached one.
+  searchPlaces: (query: string, limit = 5, refresh = false) =>
+    fetchApi<{ places: GeoPlace[] }>(
+      `/geo/search?q=${encodeURIComponent(query)}&limit=${limit}${refresh ? '&refresh=1' : ''}`,
+    ),
+  reverseGeocode: (lat: number, lon: number, refresh = false) =>
+    fetchApi<{ place: GeoPlace | null }>(
+      `/geo/reverse?lat=${lat}&lon=${lon}${refresh ? '&refresh=1' : ''}`,
+    ),
   generateRoute: (waypoints: string, mode = 'drive') =>
     fetchApi<GeoRoute>(`/geo/route?waypoints=${encodeURIComponent(waypoints)}&mode=${mode}`),
+  purgeGeoCache: () => fetchApi<GeoCachePurgeResult>('/geo/cache-purge', { method: 'POST' }),
 
   // Custom Packages
   getDestinations: () => fetchApi<{ destinations: Destination[] }>('/custom-packages/destinations'),
@@ -198,4 +204,4 @@ export const api = {
 };
 
 // Import types at the top level for convenience
-import type { Profile, TourDeal, CustomPackage, Booking, SavedDeal, PearlsHistory, Destination, ProfileStats, AdminStats, PackageDestination, PackageDistrict, PackageTourSpot, GeoPlace, GeoRoute } from '../types';
+import type { Profile, TourDeal, CustomPackage, Booking, SavedDeal, PearlsHistory, Destination, ProfileStats, AdminStats, PackageDestination, PackageDistrict, PackageTourSpot, GeoPlace, GeoRoute, GeoCachePurgeResult } from '../types';

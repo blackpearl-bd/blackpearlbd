@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Plus, Edit, Trash2, Package, Loader2, Search, MapPin, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, X, GripVertical, Upload, Calendar, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Package, Loader2, Search, MapPin, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, X, GripVertical, Upload, Calendar, Eye, RefreshCw, LocateFixed } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { DEAL_CATEGORIES, getDealCategory } from '@/lib/deal-category';
 import { useDeals } from '@/hooks/useDeals';
@@ -82,6 +82,8 @@ export function DealsManager() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isPurgingGeoCache, setIsPurgingGeoCache] = useState(false);
+  const [snappingWaypointIndex, setSnappingWaypointIndex] = useState<number | null>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const setRouteWaypoints = (waypoints: Waypoint[]) => {
@@ -199,6 +201,65 @@ export function DealsManager() {
 
   const removeWaypoint = (index: number) => {
     setRouteWaypoints(formData.route_waypoints.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  /**
+   * Drops cached place lookups from the session, the Worker's isolate and the
+   * edge cache, so the next search or pin snap asks Geoapify again instead of
+   * waiting out the TTL. Cache entries live in layers we can't all address, so
+   * the toast reports what was actually cleared.
+   */
+  const clearGeoCache = async () => {
+    setIsPurgingGeoCache(true);
+    try {
+      const result = await api.purgeGeoCache();
+      geocodeCache.clear();
+      setSearchResults([]);
+      setSearchMessage('Cached lookups cleared. Search again for fresh results.');
+      const edge = result.edgeCacheAvailable
+        ? `, ${result.edgeEntriesDeleted} edge ${result.edgeEntriesDeleted === 1 ? 'entry' : 'entries'}`
+        : ' (edge cache inactive on this host)';
+      toast.success(`Cleared ${result.isolateEntriesCleared} cached ${result.isolateEntriesCleared === 1 ? 'lookup' : 'lookups'}${edge}`);
+    } catch (error: any) {
+      toast.error(error?.message || 'Could not clear the lookup cache');
+    } finally {
+      setIsPurgingGeoCache(false);
+    }
+  };
+
+  /** Re-snaps one stop to the nearest road, bypassing any cached answer. */
+  const refreshWaypointSnap = async (index: number) => {
+    const point = formData.route_waypoints[index];
+    if (!point) return;
+    setSnappingWaypointIndex(index);
+    try {
+      const { place } = await api.reverseGeocode(point.lat, point.lng, true);
+      if (!place) {
+        toast.error('No address found near that stop');
+        return;
+      }
+      const moved = Math.abs(place.lat - point.lat) > 1e-6 || Math.abs(place.lon - point.lng) > 1e-6;
+      setFormData((current) => ({
+        ...current,
+        route_waypoints: current.route_waypoints.map((waypoint, waypointIndex) =>
+          waypointIndex === index
+            ? { ...waypoint, lat: place.lat, lng: place.lon, name: place.address || waypoint.name }
+            : waypoint,
+        ),
+        // Moving a stop invalidates the saved route.
+        route_geometry: moved ? null : current.route_geometry,
+      }));
+      if (moved) {
+        // The old distance/time no longer describes this route.
+        setRouteStats(null);
+        setRouteMessage('Stop moved to the nearest road — generate the route again to update it.');
+      }
+      toast.success(moved ? 'Stop snapped to the nearest road' : 'Stop is already on the nearest road');
+    } catch (error: any) {
+      toast.error(error?.message || 'Could not look up that stop');
+    } finally {
+      setSnappingWaypointIndex(null);
+    }
   };
 
   // Snap a waypoint to the nearest road using reverse geocoding.
@@ -840,7 +901,21 @@ export function DealsManager() {
               <div className="col-span-2 border-t pt-4">
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div><h3 className="font-semibold flex items-center gap-2"><MapPin className="h-4 w-4" />Route Map</h3><p className="text-xs text-muted-foreground">Add stops in order, then generate the driving route once before saving.</p></div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">{formData.route_waypoints.length} stop{formData.route_waypoints.length === 1 ? '' : 's'}</span>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">{formData.route_waypoints.length} stop{formData.route_waypoints.length === 1 ? '' : 's'}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-10 gap-1.5 px-2 text-xs"
+                      onClick={clearGeoCache}
+                      disabled={isPurgingGeoCache}
+                      title="Forget cached place lookups and pin snaps so the next request asks Geoapify again"
+                    >
+                      {isPurgingGeoCache ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                      {isPurgingGeoCache ? 'Clearing' : 'Clear cache'}
+                    </Button>
+                  </div>
                 </div>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <Input value={searchText} onChange={(e) => setSearchText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); searchPlaces(); } }} placeholder="Search a place (e.g. Dhaka)" aria-label="Search for a route stop" />
@@ -877,6 +952,7 @@ export function DealsManager() {
                           aria-label={'Stop ' + (index + 1) + ' name'}
                           className="order-1 h-10 min-w-0 basis-[calc(100%-3rem)] flex-1 sm:order-none sm:h-8"
                         />
+                        <Button type="button" variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={() => refreshWaypointSnap(index)} disabled={snappingWaypointIndex === index} title="Re-look up the nearest road for this stop" aria-label={'Re-snap ' + point.name + ' to the nearest road'}>{snappingWaypointIndex === index ? <Loader2 className="h-4 w-4 animate-spin" /> : <LocateFixed className="h-4 w-4" />}</Button>
                         <Button type="button" variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={() => moveWaypoint(index, -1)} disabled={index === 0} aria-label={'Move ' + point.name + ' up'}><ChevronUp className="h-4 w-4" /></Button>
                         <Button type="button" variant="ghost" size="icon" className="h-10 w-10 shrink-0" onClick={() => moveWaypoint(index, 1)} disabled={index === formData.route_waypoints.length - 1} aria-label={'Move ' + point.name + ' down'}><ChevronDown className="h-4 w-4" /></Button>
                         <Button type="button" variant="ghost" size="icon" className="h-10 w-10 shrink-0 text-destructive" onClick={() => removeWaypoint(index)} aria-label={'Remove ' + point.name}><X className="h-4 w-4" /></Button>
@@ -914,7 +990,7 @@ export function DealsManager() {
                     return [waypointRow, imageSelector];
                   })}
                   {formData.route_waypoints.length === 0 && <p className="text-xs text-muted-foreground">No stops yet. Search for a place or click anywhere on the map.</p>}
-                  {formData.route_waypoints.length > 1 && <p className="text-xs text-muted-foreground">Drag stops to change the route order. Use the arrow buttons on touch devices. Reordering or adding/removing a stop requires generating the route again; renaming a stop does not.</p>}
+                  {formData.route_waypoints.length > 1 && <p className="text-xs text-muted-foreground">Drag stops to change the route order. Use the arrow buttons on touch devices. Reordering or adding/removing a stop requires generating the route again; renaming a stop does not. The pin button re-snaps a stop to the nearest road.</p>}
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-3"><Button type="button" variant="outline" onClick={generateRoute} disabled={isGeneratingRoute || formData.route_waypoints.length < 2}>{isGeneratingRoute ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}{isGeneratingRoute ? 'Generating route...' : 'Generate route'}</Button>{routeStats && <span className="text-sm text-muted-foreground">{(routeStats.distance / 1000).toFixed(1)} km · {(routeStats.time / 60).toFixed(0)} min</span>}</div>
                 {routeMessage && <p className={'mt-2 text-xs ' + (routeMessage.includes('ready') ? 'text-emerald-700' : 'text-amber-700')} role="status">{routeMessage}</p>}

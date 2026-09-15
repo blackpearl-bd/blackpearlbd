@@ -38,6 +38,17 @@ interface CounterSet {
 const counters = new Map<GeoCacheNamespace, CounterSet>();
 const startedAt = Date.now();
 
+/** Maintenance activity, surfaced by /geo/cache-stats. */
+const maintenance = {
+  refreshes: 0,
+  purges: 0,
+  lastPurgeAt: null as string | null,
+  lastPurgedKeys: 0,
+};
+
+/** Bound the work one purge can do in a single request. */
+const PURGE_KEY_LIMIT = 100;
+
 function counterFor(namespace: GeoCacheNamespace): CounterSet {
   let entry = counters.get(namespace);
   if (!entry) {
@@ -123,9 +134,24 @@ export async function readThroughCache<T>(
   keyUrl: string,
   ttlSeconds: number,
   produce: () => Promise<T>,
+  options: { refresh?: boolean } = {},
 ): Promise<{ value: T; source: GeoCacheSource }> {
   const counter = counterFor(namespace);
   counter.requests += 1;
+
+  const key = new Request(keyUrl, { method: 'GET' });
+
+  // A "refresh" is a deliberate bypass: the caller wants the current upstream
+  // answer even if a cached one exists. The fresh value is written back over
+  // both layers, so the stale entry is replaced rather than left behind.
+  if (options.refresh) {
+    maintenance.refreshes += 1;
+    counter.misses += 1;
+    const value = await produce();
+    memoSet(keyUrl, value, ttlSeconds);
+    await edgePut(key, value, ttlSeconds);
+    return { value, source: 'origin' };
+  }
 
   const fromMemo = memoGet<T>(keyUrl);
   if (fromMemo !== undefined) {
@@ -135,8 +161,6 @@ export async function readThroughCache<T>(
 
   // A key without request headers, so two admins (and two sessions) share one
   // entry instead of caching per Authorization token.
-  const key = new Request(keyUrl, { method: 'GET' });
-
   const fromEdge = await edgeGet<T>(key);
   if (fromEdge !== undefined) {
     counter.edgeHits += 1;
@@ -149,6 +173,60 @@ export async function readThroughCache<T>(
   memoSet(keyUrl, value, ttlSeconds);
   await edgePut(key, value, ttlSeconds);
   return { value, source: 'origin' };
+}
+
+export interface GeoCachePurgeResult {
+  isolateEntriesCleared: number;
+  edgeKeysAttempted: number;
+  edgeEntriesDeleted: number;
+  /** True when more entries existed than a single purge will process. */
+  truncated: boolean;
+  edgeCacheAvailable: boolean;
+  note: string;
+}
+
+/**
+ * Drop every cached lookup this isolate knows about, from both layers.
+ *
+ * The isolate's memo holds the cache keys themselves, which is what makes the
+ * edge half possible at all: the Cache API has no way to list or pattern-match
+ * keys, so an entry can only be deleted if its key is known. Entries cached by
+ * *other* isolates are therefore unreachable from here and age out with their
+ * TTL — acceptable because the TTLs are short (1h / 24h) and a fresh answer is
+ * written back by the next lookup.
+ */
+export async function purgeGeoCache(): Promise<GeoCachePurgeResult> {
+  const keys = [...memo.keys()];
+  const targets = keys.slice(0, PURGE_KEY_LIMIT);
+  memo.clear();
+
+  maintenance.purges += 1;
+  maintenance.lastPurgeAt = new Date().toISOString();
+  maintenance.lastPurgedKeys = targets.length;
+
+  const cache = edgeCache();
+  let deleted = 0;
+
+  if (cache) {
+    for (const keyUrl of targets) {
+      try {
+        if (await cache.delete(new Request(keyUrl, { method: 'GET' }))) deleted += 1;
+      } catch (error) {
+        console.warn('Geo edge cache delete failed:', error);
+      }
+    }
+  }
+
+  return {
+    isolateEntriesCleared: targets.length,
+    edgeKeysAttempted: cache ? targets.length : 0,
+    edgeEntriesDeleted: deleted,
+    truncated: keys.length > targets.length,
+    edgeCacheAvailable: cache !== null,
+    note: cache
+      ? 'Edge entries were deleted by key. Entries cached in other data centres or isolates are not addressable and expire on their own.'
+      : 'The edge cache is unavailable on this host (Cache API is a no-op on *.workers.dev), so only in-memory entries were cleared.',
+  };
 }
 
 /**
@@ -185,6 +263,7 @@ export interface GeoCacheStatsSnapshot {
   edge: { capable: boolean; probe: string };
   totals: CounterSet & { savedUpstreamCalls: number };
   byNamespace: Record<string, CounterSet>;
+  maintenance: { refreshes: number; purges: number; lastPurgeAt: string | null; lastPurgedKeys: number };
   note: string;
 }
 
@@ -214,6 +293,7 @@ export async function geoCacheStats(requestUrl: string): Promise<GeoCacheStatsSn
     edge: { capable: edgeCache() !== null, probe: await probeEdgeCache(requestUrl) },
     totals: { ...totals, savedUpstreamCalls: totals.isolateHits + totals.edgeHits },
     byNamespace,
+    maintenance: { ...maintenance },
     note:
       'Per-isolate counters: isolates are short-lived and there are many, so short-lived ad-hoc reads are expected to show small numbers. The edge probe is the authoritative check that the Cloudflare cache is active.',
   };

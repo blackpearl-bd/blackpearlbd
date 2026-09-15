@@ -45,6 +45,16 @@ export interface GeoRoute {
   time: number;
 }
 
+/** Result of `POST /geo/cache-purge`, describing what was actually discarded. */
+export interface GeoCachePurgeResult {
+  isolateEntriesCleared: number;
+  edgeKeysAttempted: number;
+  edgeEntriesDeleted: number;
+  truncated: boolean;
+  edgeCacheAvailable: boolean;
+  note: string;
+}
+
 export interface TourDeal {
   id: string;
   deal_code: string | null;

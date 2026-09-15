@@ -3,7 +3,7 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { authMiddleware } from '../middleware/auth';
 import { adminMiddleware } from '../middleware/admin';
 import { GeoapifyError, reverseGeocode, route, searchPlaces } from '../lib/geoapify';
-import { geoCacheStats, readThroughCache } from '../lib/geo-cache';
+import { geoCacheStats, purgeGeoCache, readThroughCache } from '../lib/geo-cache';
 import { GeoReverseQuerySchema, GeoRouteQuerySchema, GeoSearchQuerySchema } from '../lib/validators';
 import { Env } from '../types';
 
@@ -78,6 +78,8 @@ export async function handleSearch(c: Context) {
   }
 
   const { q, limit } = parsed.data;
+  // `refresh=1` bypasses the cached answer for a deliberate re-lookup.
+  const refresh = c.req.query('refresh') === '1';
 
   try {
     const { value, source } = await readThroughCache(
@@ -85,6 +87,7 @@ export async function handleSearch(c: Context) {
       cacheKeyUrl(c.req.url, '/search', { q: normalizeQuery(q), limit: String(limit) }),
       SEARCH_TTL_SECONDS,
       () => searchPlaces(q, limit, apiKey),
+      { refresh },
     );
     return c.json({ places: value }, 200, { 'X-Geo-Cache': source });
   } catch (error) {
@@ -106,6 +109,7 @@ export async function handleReverse(c: Context) {
   }
 
   const { lat, lon } = parsed.data;
+  const refresh = c.req.query('refresh') === '1';
 
   try {
     // Rounded to ~11m so pins dropped a few metres apart reuse one lookup. The
@@ -115,6 +119,7 @@ export async function handleReverse(c: Context) {
       cacheKeyUrl(c.req.url, '/reverse', { lat: lat.toFixed(4), lon: lon.toFixed(4) }),
       REVERSE_TTL_SECONDS,
       () => reverseGeocode(lat, lon, apiKey),
+      { refresh },
     );
     return c.json({ place: value }, 200, { 'X-Geo-Cache': source });
   } catch (error) {
@@ -158,6 +163,15 @@ export async function handleCacheStats(c: Context) {
   return c.json(await geoCacheStats(c.req.url));
 }
 
+/**
+ * Drops every cached lookup the serving isolate can reach, in both layers, so an
+ * admin can force a fresh answer instead of waiting out the TTL. Admin-only: it
+ * is a mutation, and it discards shared cache entries.
+ */
+export async function handleCachePurge(c: Context) {
+  return c.json(await purgeGeoCache());
+}
+
 const geo = new Hono();
 
 // Registered before the authed routes so it stays reachable without a token.
@@ -166,5 +180,6 @@ geo.get('/cache-stats', handleCacheStats);
 geo.get('/search', authMiddleware, adminMiddleware, handleSearch);
 geo.get('/reverse', authMiddleware, adminMiddleware, handleReverse);
 geo.get('/route', authMiddleware, adminMiddleware, handleRoute);
+geo.post('/cache-purge', authMiddleware, adminMiddleware, handleCachePurge);
 
 export default geo;
